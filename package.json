@@ -1,0 +1,34 @@
+{
+  "name": "blackbeard",
+  "version": "0.0.0",
+  "description": "Back end Node.js framework built to be familiar, simple, and powerful.",
+  "main": "dist/blackbeard.js",
+  "author": "Nick Dugger",
+  "license": "MIT",
+  "bin": {
+    "blackbeard init": "dest/bin/blackbeard.init.js",
+    "blackbeard init --examples": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ndugger/blackbeard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ndugger/blackbeard/issues"
+  },
+  "homepage": "https://github.com/ndugger/blackbeard#readme",
+  "devDependencies": {
+    "babel-core": "^5.8.25",
+    "babel-runtime": "^5.8.25",
+    "gulp": "^3.9.0",
+    "gulp-babel": "^5.2.1"
+  },
+  "dependencies": {
+    "ejs": "^2.3.4",
+    "file-type": "^3.1.0",
+    "mime": "^1.3.4",
+    "passport": "^0.3.0",
+    "redis": "^2.2.1",
+    "sequelize": "^3.12.0"
+  }
+}
