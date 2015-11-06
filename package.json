@@ -1,13 +1,10 @@
 {
   "name": "blackbeard",
-  "version": "0.0.1-alpha",
+  "version": "0.0.2-alpha",
   "description": "Back end Node.js framework built to be familiar, simple, and powerful.",
   "main": "dist/blackbeard.js",
   "author": "Nick Dugger",
   "license": "MIT",
-  "bin": {
-    
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ndugger/blackbeard.git"
