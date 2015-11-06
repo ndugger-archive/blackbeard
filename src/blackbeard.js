@@ -10,20 +10,30 @@ import filetype from 'file-type';
 import redis from 'redis';
 
 // Blackbeard modules:
-import Cache, {
+import _Cache, {
 	storeInCache, 
 	rememberFromCache, 
 	forgetCachedItem
 } from './cache';
-import Controller from './controller';
-import DataString from './datastring';
-import File from './file';
-import Model from './model';
-import Requirements, {
+import _Controller from './controller';
+import _DataString from './datastring';
+import _File from './file';
+import _Model from './model';
+import _Requirements, {
 	isAuthenticated
 } from './requirements';
-import Router from './router';
-import View from './view';
+import _Router from './router';
+import _View from './view';
+
+// Convenient exports:
+export const Cache = _Cache;
+export const Controller = _Controller;
+export const DataString = _DataString;
+export const File = _File;
+export const Model = _Model;
+export const Requirements = _Requirements;
+export const Router = _Router;
+export const View = _View;
 
 // Mappings to sequelize schema:
 export const Schema = {

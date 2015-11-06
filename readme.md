@@ -4,6 +4,6 @@ Blackbeard
 ==========
 **Simple, powerful, familiar**
 
-Blackbeard as an MVC framework for Node.js, designed to be familar.
+Blackbeard is an MVC framework for Node.js, designed to be familar.
 
 (Licensed under MIT)

@@ -77,6 +77,24 @@ var _view = require('./view');
 
 var _view2 = _interopRequireDefault(_view);
 
+// Convenience exports:
+var Cache = _cache2['default'];
+exports.Cache = Cache;
+var Controller = _controller2['default'];
+exports.Controller = Controller;
+var DataString = _datastring2['default'];
+exports.DataString = DataString;
+var File = _file2['default'];
+exports.File = File;
+var Model = _model2['default'];
+exports.Model = Model;
+var Requirements = _requirements2['default'];
+exports.Requirements = Requirements;
+var Router = _router2['default'];
+exports.Router = Router;
+var View = _view2['default'];
+
+exports.View = View;
 // Mappings to sequelize schema:
 var Schema = {
 	String: _sequelize2['default'].STRING,
@@ -322,7 +340,7 @@ var Blackbeard = (function () {
 				while (1) switch (context$2$0.prev = context$2$0.next) {
 					case 0:
 						if ('body' in options) delete options.body;
-						options.method = _router2['default'].GET;
+						options.method = Router.GET;
 						context$2$0.next = 4;
 						return _regeneratorRuntime.awrap(this.request(path, options));
 
@@ -343,7 +361,7 @@ var Blackbeard = (function () {
 			return _regeneratorRuntime.async(function post$(context$2$0) {
 				while (1) switch (context$2$0.prev = context$2$0.next) {
 					case 0:
-						options.method = _router2['default'].POST;
+						options.method = Router.POST;
 						context$2$0.next = 3;
 						return _regeneratorRuntime.awrap(this.request(path, options));
 
@@ -365,7 +383,7 @@ var Blackbeard = (function () {
 			return _regeneratorRuntime.async(function __listen__$(context$2$0) {
 				while (1) switch (context$2$0.prev = context$2$0.next) {
 					case 0:
-						route = _router2['default'].find(request.url);
+						route = Router.find(request.url);
 						query = _url2['default'].parse(request.url).query;
 						cachedResponse = undefined;
 						routeResponse = undefined;
@@ -409,7 +427,7 @@ var Blackbeard = (function () {
 
 					case 18:
 						context$2$0.t0 = request.method.toUpperCase();
-						context$2$0.next = context$2$0.t0 === _router2['default'].GET ? 21 : context$2$0.t0 === _router2['default'].POST ? 25 : context$2$0.t0 === _router2['default'].PUT ? 29 : 33;
+						context$2$0.next = context$2$0.t0 === Router.GET ? 21 : context$2$0.t0 === Router.POST ? 25 : context$2$0.t0 === Router.PUT ? 29 : 33;
 						break;
 
 					case 21:
@@ -443,7 +461,7 @@ var Blackbeard = (function () {
 						}
 
 						context$2$0.t1 = true;
-						context$2$0.next = context$2$0.t1 === (typeof routeResponse === 'string') ? 37 : context$2$0.t1 === (typeof routeResponse === 'number') ? 39 : context$2$0.t1 === routeResponse instanceof _view2['default'] ? 41 : context$2$0.t1 === routeResponse instanceof _file2['default'] ? 46 : context$2$0.t1 === routeResponse instanceof Buffer ? 52 : context$2$0.t1 === routeResponse instanceof _datastring2['default'] ? 54 : context$2$0.t1 === routeResponse instanceof Object ? 56 : 67;
+						context$2$0.next = context$2$0.t1 === (typeof routeResponse === 'string') ? 37 : context$2$0.t1 === (typeof routeResponse === 'number') ? 39 : context$2$0.t1 === routeResponse instanceof View ? 41 : context$2$0.t1 === routeResponse instanceof File ? 46 : context$2$0.t1 === routeResponse instanceof Buffer ? 52 : context$2$0.t1 === routeResponse instanceof DataString ? 54 : context$2$0.t1 === routeResponse instanceof Object ? 56 : 67;
 						break;
 
 					case 37:
@@ -540,7 +558,7 @@ var Blackbeard = (function () {
 						break;
 
 					case 80:
-						file = new _file2['default'](request.url);
+						file = new File(request.url);
 						context$2$0.next = 83;
 						return _regeneratorRuntime.awrap(file.read());
 
@@ -664,35 +682,35 @@ var Blackbeard = (function () {
 		key: 'Cache',
 
 		// Blackbeard objects:
-		value: _cache2['default'],
+		value: Cache,
 		enumerable: true
 	}, {
 		key: 'Controller',
-		value: _controller2['default'],
+		value: Controller,
 		enumerable: true
 	}, {
 		key: 'DataString',
-		value: _datastring2['default'],
+		value: DataString,
 		enumerable: true
 	}, {
 		key: 'File',
-		value: _file2['default'],
+		value: File,
 		enumerable: true
 	}, {
 		key: 'Model',
-		value: _model2['default'],
+		value: Model,
 		enumerable: true
 	}, {
 		key: 'Requirements',
-		value: _requirements2['default'],
+		value: Requirements,
 		enumerable: true
 	}, {
 		key: 'Router',
-		value: _router2['default'],
+		value: Router,
 		enumerable: true
 	}, {
 		key: 'View',
-		value: _view2['default'],
+		value: View,
 
 		// Requirements helper functions:
 		enumerable: true
