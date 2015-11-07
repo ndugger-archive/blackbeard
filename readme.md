@@ -6,4 +6,7 @@ Blackbeard
 
 Blackbeard is an MVC framework for Node.js, designed to be familar.
 
+Using Redis (for caching), Sequelize (for models/ORM), and Passport (for user authentication), 
+Blackbeard offers a complete solution for developing Node.js applications.
+
 (Licensed under MIT)

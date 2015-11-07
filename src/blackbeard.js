@@ -70,6 +70,7 @@ export default class Blackbeard {
 	static Controller = Controller;
 	static DataString = DataString;
 	static File = File;
+	static Log = Log;
 	static Model = Model;
 	static Requirements = Requirements;
 	static Router = Router;
@@ -92,10 +93,10 @@ export default class Blackbeard {
 		http.routes = {};
 		http.controllers = {};
 
-		const blueprint = fs.readFileSync(path.join(process.cwd(), 'blackbeard.settings.json'), 'utf8');
+		const settings = fs.readFileSync(path.join(process.cwd(), 'blackbeard.settings.json'), 'utf8');
 
-		if (blueprint) {
-			const settings = JSON.parse(blueprint);
+		if (settings) {
+			settings = JSON.parse(settings);
 
 			this.ready = true;
 			this.settings = settings;

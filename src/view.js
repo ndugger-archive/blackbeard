@@ -1,4 +1,4 @@
-import ejs from 'ejs';
+import ejs from 'ejs-locals';
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
