@@ -276,7 +276,10 @@ export default class Blackbeard {
 					// View:
 					case routeResponse instanceof View: routeResponse = {
 						mime: 'text/html',
-						content: await routeResponse.render(request.controller)
+						content: await routeResponse.render(
+							request.controller, 
+							this.settings.views ? this.settings.views.layout : undefined
+						)
 					}; break;
 
 					// File:
