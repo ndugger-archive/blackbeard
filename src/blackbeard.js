@@ -93,7 +93,7 @@ export default class Blackbeard {
 		http.routes = {};
 		http.controllers = {};
 
-		const settings = fs.readFileSync(path.join(process.cwd(), 'blackbeard.settings.json'), 'utf8');
+		let settings = fs.readFileSync(path.join(process.cwd(), 'blackbeard.settings.json'), 'utf8');
 
 		if (settings) {
 			settings = JSON.parse(settings);
