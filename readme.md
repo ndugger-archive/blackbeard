@@ -16,9 +16,11 @@ Installation
 Example Usage
 -------------
 
-Designed to be used with modern (and future) javascript, you will probably need a build process for your code in order to ensure that Blackbeard works.
+Designed to be used with modern (and future) javascript, you will probably need a build process for your code in order to ensure that Blackbeard works. v0.1.0-beta will ship with a pre-built gulp file that will transpile your code for use.
 
-**app.js**
+Blackbeard looks for files in a dist/ folder; you will need to make sure to build into one.
+
+**src/app.js**
 ```javascript
 import Blackbeard from 'blackbeard';
 import './controllers/maincontroller';
@@ -28,7 +30,7 @@ Blackbeard.start();
 
 ---
 
-**models/user.js**
+**src/models/user.js**
 
 ```javascript
 import { Model, Schema } from 'blackbeard';
@@ -43,7 +45,7 @@ export default class User {
 
 ---
 
-**controllers/maincontroller.js**
+**src/controllers/maincontroller.js**
 ```javascript
 import Blackbeard from 'blackbeard';
 import User from '../models/user';
@@ -58,15 +60,13 @@ export default class MainController {
 	
 	@MapRoute('/', Router.GET)
 	async index (request, response) {
-		return new Promise((resolve, reject) => {
-			try {
-				const users = await User.findAll();
-				resolve(new View('index', { users }));
-			} catch (e) {
-				console.error(e);
-				resolve(null);
-			}	
-		});
+		try {
+			const users = await User.findAll();
+			return new View('index', { users });
+		} catch (e) {
+			console.error(e);
+			return null;
+		}
 	}
 
 	@MapRoute('/foo/{bar}', Router.GET)
@@ -76,7 +76,7 @@ export default class MainController {
 
 	@MapRoute('/foo/{bar}/{baz}', Router.POST)
 	async whatever (bar, baz, request, response) {
-		// posted data accessible via request.body
+		// posted data accessible via `request.body`
 	}
 
 }
@@ -84,7 +84,7 @@ export default class MainController {
 
 ---
 
-**views/main/index.ejs**
+**src/views/main/index.ejs**
 
 ```html
 <!doctype html>

@@ -12,7 +12,7 @@ export default class File {
 	read () {
 		return new Promise((resolve, reject) => {
 			try {
-				fs.readFile(path.join(process.cwd(), this.src), (error, file) => {
+				fs.readFile(path.join(process.cwd(), 'dist', this.src), (error, file) => {
 					if (error) {
 						console.error(error);
 						resolve(null);

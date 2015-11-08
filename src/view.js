@@ -14,7 +14,7 @@ export default class View {
 	render (controller, layout = this.layout) {
 		const controllers = http.controllers;
 
-		let views = path.join(process.cwd(), 'views');
+		let views = path.join(process.cwd(), 'dist', 'views');
 
 		if (layout) {
 			layout = path.join(views, layout);
