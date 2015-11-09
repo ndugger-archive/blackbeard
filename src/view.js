@@ -1,4 +1,4 @@
-import ejs from 'ejs-locals';
+import ejs from 'ejs';
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
@@ -35,7 +35,7 @@ export default class View {
 					return resolve(null);
 				}
 
-				view = ejs.render(view, { data: this.data });
+				view = ejs.render(view, { ...this.data });
 
 				// If no layout, just render the view:
 				if (!layout) {

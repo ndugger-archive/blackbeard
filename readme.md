@@ -8,13 +8,20 @@ Blackbeard is an MVC framework for Node.js, designed to be familar.
 
 Using Redis (*for caching*), Sequelize (*for models/ORM*), and Passport (*for user authentication*), Blackbeard offers a complete solution for developing Node.js applications.
 
-Installation
-------------
+**Current version:** 0.0.8-alpha
+
+- [Installation](#install)
+- [Example usage](#examples)
+- [Known bugs](#bugs)
+- [TODO](#todo)
+
+Installation { #install }
+-------------------------
 
 `npm install blackbeard --save`
 
-Example Usage
--------------
+Example Usage { #examples }
+---------------------------
 
 Designed to be used with modern (and future) javascript, you will probably need a build process for your code in order to ensure that Blackbeard works. v0.1.0-beta will ship with a pre-built gulp file that will transpile your code for use.
 
@@ -100,5 +107,26 @@ export default class MainController {
 	</body>
 </html>
 ```
+
+Known Bugs { #bugs }
+--------------------
+
+- Blackbear.(post|request) does not work
+- Mapping a route on a controller does not work
+
+TODO { #todo }
+--------------
+
+- Analyze/refactor caching
+- Implement proper error logging
+- Implement passport authenticaion/sessions
+- Implement `requirements` annotation
+- Possibly add more annotations for convenience
+- Refactor layouts for global data (current user, etc)
+- Build bin commands for setting up project
+- Split up `blackbeard.js` into smaller parts
+- More options in settings file for customizing project structure
+
+---
 
 (Licensed under MIT)

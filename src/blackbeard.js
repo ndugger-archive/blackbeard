@@ -70,7 +70,6 @@ export default class Blackbeard {
 	static Controller = Controller;
 	static DataString = DataString;
 	static File = File;
-	static Log = Log;
 	static Model = Model;
 	static Requirements = Requirements;
 	static Router = Router;
@@ -198,14 +197,14 @@ export default class Blackbeard {
 	}
 
 	// Alias for making an HTTP GET request:
-	static async get (path, options) {
+	static async get (path, options = {}) {
 		if ('body' in options) delete options.body;
 		options.method = Router.GET;
 		return await this.request(path, options);
 	}
 
 	// Alias for making an HTTP POST request:
-	static async post (path, options) {
+	static async post (path, options = {}) {
 		options.method = Router.POST;
 		return await this.request(path, options);
 	}
