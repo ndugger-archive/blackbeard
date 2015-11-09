@@ -10,18 +10,18 @@ Using Redis (*for caching*), Sequelize (*for models/ORM*), and Passport (*for us
 
 **Current version:** 0.0.8-alpha
 
-- [Installation](#install)
-- [Example usage](#examples)
-- [Known bugs](#bugs)
+- [Installation](#installation)
+- [Example usage](#example-usage)
+- [Known bugs](#known-bugs)
 - [TODO](#todo)
 
-Installation { #install }
--------------------------
+Installation
+------------
 
 `npm install blackbeard --save`
 
-Example Usage { #examples }
----------------------------
+Example Usage
+-------------
 
 Designed to be used with modern (and future) javascript, you will probably need a build process for your code in order to ensure that Blackbeard works. v0.1.0-beta will ship with a pre-built gulp file that will transpile your code for use.
 
@@ -108,14 +108,14 @@ export default class MainController {
 </html>
 ```
 
-Known Bugs { #bugs }
---------------------
+Known Bugs
+----------
 
-- Blackbear.(post|request) does not work
-- Mapping a route on a controller does not work
+- Blackbeard.(post|request) does not work
+- ~~Mapping a route on a controller does not work~~
 
-TODO { #todo }
---------------
+TODO
+----
 
 - Analyze/refactor caching
 - Implement proper error logging

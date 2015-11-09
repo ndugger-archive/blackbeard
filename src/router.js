@@ -24,7 +24,7 @@ export default class Router {
 		// Return the real decorator:
 		return (controller, action, descriptor) => {
 
-			// Mapping a method:
+			// Mapping an action:
 			if (action) {
 				routes[url] = { action, controller, method };
 
@@ -37,7 +37,9 @@ export default class Router {
 
 				// Modify routes to include controller's url:
 				for (let route in routes) {
-					if (routes[route].controller === controller) {
+					const routeControllerName = routes[route].controller.constructor.name;
+
+					if (routeControllerName === controller.name) {
 						reRoutes[path.join(url, route)] = routes[route];
 					} else {
 						reRoutes[route] = routes[route];
