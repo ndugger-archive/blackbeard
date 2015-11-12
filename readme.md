@@ -4,11 +4,13 @@ Blackbeard
 ==========
 **Simple, powerful, familiar**
 
-Blackbeard is an MVC framework for Node.js, designed to be familar.
+Blackbeard is an opinionated MVC framework for Node.js, designed to be familar.
 
 Using Redis (*for caching*), Sequelize (*for models/ORM*), and Passport (*for user authentication*), Blackbeard offers a complete solution for developing Node.js applications.
 
-**Current version:** 0.0.8-alpha
+Blackboard currently only supports [Marko](https://www.npmjs.com/package/marko) for templating, but plans to support others are in the pipeline. Suggestions are welcome.
+
+**Current version:** 0.0.10-alpha
 
 - [Installation](#installation)
 - [Example usage](#example-usage)
@@ -19,6 +21,10 @@ Installation
 ------------
 
 `npm install blackbeard --save`
+
+If you want to use caching, you will need to install the redis server from [redis.io](http://redis.io/). If you'd like to use a database with sequelize, you'll have to install the appropriate modules (pg, mysql, etc).
+
+More in-depth installation instructions will be provided upon beta release.
 
 Example Usage
 -------------
@@ -91,41 +97,44 @@ export default class MainController {
 
 ---
 
-**src/views/main/index.ejs**
+**src/views/main/index.marko**
 
 ```html
 <!doctype html>
 <html>
 	<body>
+
 		<div class='users'>
-			<% users.forEach(user => { %>
-				<div class='user'>
-					<b><%- user.name %></b>: <%- user.age %>
-				</div>
-			<% }) %>
+
+			<div class='user' for='user in users'>
+				<b>${ user.name }</b>: ${ user.age }
+			</div>
+
 		</div>
+
 	</body>
 </html>
 ```
 
 Known Bugs
 ----------
-
 - Blackbeard.(post|request) does not work
+
+Fixed Bugs
+----------
 - ~~Mapping a route on a controller does not work~~
 
 TODO
 ----
-
 - Analyze/refactor caching
 - Implement proper error logging
 - Implement passport authenticaion/sessions
 - Implement `requirements` annotation
 - Possibly add more annotations for convenience
-- Refactor layouts for global data (current user, etc)
 - Build bin commands for setting up project
 - Split up `blackbeard.js` into smaller parts
 - More options in settings file for customizing project structure
+- Possibly add support for swapping template engines
 
 ---
 

@@ -1,7 +1,8 @@
-import ejs from 'ejs';
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
+
+import marko from 'marko';
 
 export default class View {
 
@@ -28,31 +29,17 @@ export default class View {
 		}
 
 		return new Promise((resolve, reject) => {
-			fs.readFile(`${path.join(views, this.path)}.ejs`, 'utf8', (error, view) => {
+			const templatePath = `${path.join(views, this.path)}.marko`;
+
+			fs.readFile(templatePath, 'utf8', (error, view) => {
 
 				if (error) {
 					console.error(error);
 					return resolve(null);
 				}
 
-				view = ejs.render(view, { ...this.data });
-
-				// If no layout, just render the view:
-				if (!layout) {
-					return resolve(view);
-				}
-
-				// If a layout is provided, render the view into the layout:
-				fs.readFile(`${layout}.ejs`, 'utf8', (error, layout) => {
-
-					if (error) {
-						console.error(error);
-						return resolve(null);
-					}
-
-					resolve(ejs.render(layout, { body: view }));
-
-				});
+				const template = marko.load(templatePath, view);
+				template.render(this.data, (error, html) => error ? console.error(error) : resolve(html));
 
 			});
 		});
