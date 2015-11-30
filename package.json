@@ -1,6 +1,6 @@
 {
   "name": "blackbeard",
-  "version": "0.0.10-alpha",
+  "version": "0.0.11-alpha",
   "description": "Back end Node.js framework built to be familiar, simple, and powerful.",
   "main": "dist/blackbeard.js",
   "author": "Nick Dugger",
@@ -22,6 +22,7 @@
     "gulp-uglify": "^1.4.2"
   },
   "dependencies": {
+    "cookies": "^0.5.1",
     "file-type": "^3.1.0",
     "log": "^1.4.0",
     "marko": "^2.7.29",

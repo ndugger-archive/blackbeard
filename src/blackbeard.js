@@ -18,11 +18,13 @@ import _Cache, {
 import _Controller from './controller';
 import _DataString from './datastring';
 import _File from './file';
+import _Media from './media';
 import _Model from './model';
 import _Requirements, {
 	isAuthenticated
 } from './requirements';
 import _Router from './router';
+import _Session from './session';
 import _View from './view';
 
 // Convenient exports:
@@ -30,9 +32,11 @@ export const Cache = _Cache;
 export const Controller = _Controller;
 export const DataString = _DataString;
 export const File = _File;
+export const Media = _Media;
 export const Model = _Model;
 export const Requirements = _Requirements;
 export const Router = _Router;
+export const Session = _Session;
 export const View = _View;
 
 // Mappings to sequelize schema:
@@ -70,9 +74,11 @@ export default class Blackbeard {
 	static Controller = Controller;
 	static DataString = DataString;
 	static File = File;
+	static Media = Media;
 	static Model = Model;
 	static Requirements = Requirements;
 	static Router = Router;
+	static Session = Session;
 	static View = View;
 
 	// Requirements helper functions:
@@ -137,12 +143,17 @@ export default class Blackbeard {
 
 	// Start the server on specified port:
 	static async start (port = this.settings.server.port) {
-		if (!this.ready && !this.settings) {
-			return console.error('Server is not ready or cannot find a blackbeard.settings.json file');
-		}
-
-		// Start the actual HTTP server:
 		try {
+
+			if (!this.ready && !this.settings) {
+				throw new Error('Server is not ready or cannot find a blackbeard.settings.json file');
+			}
+
+			for (let route in http.routes) {
+				if (route.match(/dupe:/)) throw new TypeError(`There are multiple routes with the path of ${route.replace(/dupe:/, '')}`);
+			}
+
+			// Start the actual HTTP server:
 			http.createServer((request, response) => this.__listen__(request, response)).listen(port);
 		} catch (e) {
 			console.error(e);
@@ -275,10 +286,7 @@ export default class Blackbeard {
 					// View:
 					case routeResponse instanceof View: routeResponse = {
 						mime: 'text/html',
-						content: await routeResponse.render(
-							request.controller, 
-							this.settings.views ? this.settings.views.layout : undefined
-						)
+						content: await routeResponse.render(request, response)
 					}; break;
 
 					// File:
@@ -286,6 +294,11 @@ export default class Blackbeard {
 						mime: routeResponse.mime,
 						content: await routeResponse.read()
 					}; break;
+
+					// Media:
+					case routeResponse instanceof Media: {
+						return routeResponse.read(request, response);
+					}
 
 					// Buffer:
 					case routeResponse instanceof Buffer: routeResponse = {
@@ -298,6 +311,15 @@ export default class Blackbeard {
 						mime: routeResponse.mime,
 						content: routeResponse.data.toString()
 					}; break;
+
+					// Session:
+					case routeResponse instanceof Session: {
+						await routeResponse.save(request, response); 
+						routeResponse = {
+							mime: 'application/json',
+							content: JSON.stringify(routeResponse.data)
+						}; 
+					} break;
 
 					// Object (try to send as JSON):
 					case routeResponse instanceof Object: try { 
@@ -335,9 +357,13 @@ export default class Blackbeard {
 				response.writeHead(204);
 				response.end();
 			}
-		} 
-		// No route, attempt to serve a file:
-		else {
+		} else {
+
+			if ('range' in request.headers) {
+				const media = new Media(request.url);
+				return media.read(request, response);
+			}
+
 			const file = new File(request.url);
 			const content = await file.read();
 

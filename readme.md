@@ -22,7 +22,9 @@ Installation
 
 `npm install blackbeard --save`
 
-If you want to use caching, you will need to install the redis server from [redis.io](http://redis.io/). If you'd like to use a database with sequelize, you'll have to install the appropriate modules (pg, mysql, etc).
+If you want to use caching (and user sessions), you will need to install the redis server from [redis.io](http://redis.io/). 
+
+If you'd like to use a database with sequelize, you'll have to install the appropriate modules (pg, mysql, etc).
 
 More in-depth installation instructions will be provided upon beta release.
 
@@ -127,8 +129,8 @@ Fixed Bugs
 TODO
 ----
 - Analyze/refactor caching
+- Have each object (DataString, File, Media) self-send a response
 - Implement proper error logging
-- Implement passport authenticaion/sessions
 - Implement `requirements` annotation
 - Possibly add more annotations for convenience
 - Build bin commands for setting up project

@@ -1,20 +1,20 @@
 import http from 'http';
-
 import {storeInCache, rememberFromCache, forgetCachedItem} from './cache';
+
+const { cache } = http;
 
 function overwrite (name, remember) {
 	return function (x) {
 		const model = this;
-		const cache = model.__cache__;
 		const original = this::this.__proto__[name];
 
-		if (!cache && !cache.enabled) {
+		if (!('__cache__' in model) || !model.__cache__.enabled) {
 			return Promise.resolve(original(...arguments));
 		}
 
 		return new Promise(async resolve => {
+			const { maxAge } = model.__cache__;
 			let key = `Model::${model.name}`;
-			let maxAge = cache.maxAge;
 			if (remember) {
 				key += x ? JSON.stringify(arguments) : '';
 				const cached = await rememberFromCache(key);

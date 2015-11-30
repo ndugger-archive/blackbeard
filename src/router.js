@@ -18,14 +18,13 @@ export default class Router {
 		// Allow trailing slash to be optional:
 		url = url.replace(/\/$/, '') || '/';
 
-		// Don't allow rewriting of existing routes:
-		if (url in routes) throw new Error(`${url} is already a route`);
-
 		// Return the real decorator:
 		return (controller, action, descriptor) => {
 
 			// Mapping an action:
 			if (action) {
+				if (url in routes) url = `dupe:${url}`;
+
 				routes[url] = { action, controller, method };
 
 				descriptor.value.controller = controller;
@@ -40,7 +39,9 @@ export default class Router {
 					const routeControllerName = routes[route].controller.constructor.name;
 
 					if (routeControllerName === controller.name) {
-						reRoutes[path.join(url, route)] = routes[route];
+						const newRoute = path.join(url, route.replace(/dupe:/, ''));
+						if (newRoute in routes) throw new TypeError(`Route already exists for ${newRoute}`);
+						reRoutes[newRoute] = routes[route];
 					} else {
 						reRoutes[route] = routes[route];
 					}
