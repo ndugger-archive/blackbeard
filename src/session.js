@@ -5,13 +5,13 @@ export default class Session {
 
 	static cookie = 'blackbeard:session:id';
 
-	static async authenticated (request, response) {
+	static async isAuthenticated (request, response) {
 		const cookies = new CookieJar(request, response);
-		const sessionId = cookies.get(this.cookie);
+		const sessionId = cookies.get(Session.cookie);
 		return sessionId ? true : false;
 	}
 
-	static async retrieve (request, response) {
+	static async findSession (request, response) {
 		return new Promise(async resolve => {
 			const cookies = new CookieJar(request, response);
 			const sessionId = cookies.get(this.cookie);
@@ -20,7 +20,7 @@ export default class Session {
 		});
 	}
 
-	static async end (request, response) {
+	static async endSession (request, response) {
 
 	}
 
@@ -39,6 +39,14 @@ export default class Session {
 		} catch (e) {
 			console.error(e);
 		}
+	}
+
+	async __send__ (request, response) {
+		await this.save(request, response);
+
+		response.writeHead(200, { 'Content-Type': 'application/json' });
+		response.write(JSON.stringify(this.data));
+		response.end();
 	}
 
 }

@@ -20,12 +20,15 @@ import _DataString from './datastring';
 import _File from './file';
 import _Media from './media';
 import _Model from './model';
+import _Request from './request';
 import _Requirements, {
-	isAuthenticated
+	testRequirements
 } from './requirements';
 import _Router from './router';
 import _Session from './session';
 import _View from './view';
+
+import { skullXBones } from './ascii';
 
 // Convenient exports:
 export const Cache = _Cache;
@@ -34,6 +37,7 @@ export const DataString = _DataString;
 export const File = _File;
 export const Media = _Media;
 export const Model = _Model;
+export const Request = _Request;
 export const Requirements = _Requirements;
 export const Router = _Router;
 export const Session = _Session;
@@ -44,31 +48,24 @@ export const Schema = {
 	String: db.STRING,
 	Binary: db.STRING.BINARY,
 	Text: db.TEXT,
-
 	Integer: db.INTEGER,
 	BigInt: db.BIGINT,
 	Float: db.FLOAT,
 	Real: db.REAL,
 	Double: db.DOUBLE,
 	Decimal: db.DECIMAL,
-
 	Date: db.DATE,
-
 	Boolean: db.BOOLEAN,
 	Enum: db.ENUM,
 	Array: db.ARRAY,
-
 	JSON: db.JSON,
 	JSONB: db.JSONB,
-
 	Blob: db.BLOB,
-
 	UUID: db.UUID
 };
 
-// Blackbeard class { Blackbeard.start(port[, options]) }:
+// Arrgghh, matey!
 export default class Blackbeard {
-
 	// Blackbeard objects:
 	static Cache = Cache;
 	static Controller = Controller;
@@ -76,15 +73,11 @@ export default class Blackbeard {
 	static File = File;
 	static Media = Media;
 	static Model = Model;
+	static Request = Request;
 	static Requirements = Requirements;
 	static Router = Router;
 	static Session = Session;
 	static View = View;
-
-	// Requirements helper functions:
-	static isAuthenticated = isAuthenticated;
-
-	// Provide access to Sequelize types:
 	static Schema = Schema;
 
 	static ready = false;
@@ -92,19 +85,40 @@ export default class Blackbeard {
 		server: { port: 80 }
 	};
 
+	// Start the server on specified port:
+	static async start (port = this.settings.server.port) {
+		try {
+			if (!this.ready && !this.settings) {
+				throw new Error('Server is not ready or cannot find a blackbeard.settings.json file');
+			}
+			// Detect possible duplicate routes:
+			for (let route in http.routes) {
+				if (route.match(/dupe:/)) throw new TypeError(`There are multiple routes with the path of ${route.replace(/dupe:/, '')}`);
+			}
+			// Apply the port to the Request class for future use:
+			if (port) Request.server.port = port;
+			// Start the actual HTTP server:
+			http.createServer((request, response) => this.__listen__(request, response)).listen(port);
+			console.info(`${skullXBones}\n\nBlackbeard is now sailing on port ${port}\n\n`);
+		}
+		catch (e) {
+			console.error(e);
+		}
+	}
+
 	// Setup upon module inclusion (before server starts):
 	static __setup__ () {
-		// Store relevant objects on http:
 		http.routes = {};
 		http.controllers = {};
 
 		let settings = fs.readFileSync(path.join(process.cwd(), 'blackbeard.settings.json'), 'utf8');
-
 		if (settings) {
 			settings = JSON.parse(settings);
 
 			this.ready = true;
 			this.settings = settings;
+
+			if ('server' in settings) Request.server = settings.server;
 
 			// Connect to the database:
 			if ('database' in settings) {
@@ -135,281 +149,154 @@ export default class Blackbeard {
 					console.error(e);
 				}
 			}
-
-		} else {
+		}
+		else {
 			console.error('No blackbeard.settings.json file found in', process.cwd());
 		}
-	}
-
-	// Start the server on specified port:
-	static async start (port = this.settings.server.port) {
-		try {
-
-			if (!this.ready && !this.settings) {
-				throw new Error('Server is not ready or cannot find a blackbeard.settings.json file');
-			}
-
-			for (let route in http.routes) {
-				if (route.match(/dupe:/)) throw new TypeError(`There are multiple routes with the path of ${route.replace(/dupe:/, '')}`);
-			}
-
-			// Start the actual HTTP server:
-			http.createServer((request, response) => this.__listen__(request, response)).listen(port);
-		} catch (e) {
-			console.error(e);
-		}
-	}
-
-	// Store item in cache:
-	static async cache (key, value, maxAge) {
-		return await storeInCache(key, value, maxAge);
-	}
-
-	// Remember item from cache:
-	static async remember (key) {
-		return await rememberFromCache(key);
-	}
-
-	// Forget item in cache:
-	static async forget (key) {
-		return await forgetCachedItem(key);
-	}
-
-	// Convenient method for making an HTTP request:
-	static async request (path, options = {}) {
-		return new Promise(async resolve => {
-			options.path = path;
-
-			// Allow passing in the full URL as one string:
-			if (path.match(/https?:\/\//)) {
-				path = url.parse(path);
-				options.hostname = path.hostname;
-				options.path = path.path;
-				options.protocol = path.protocol;
-				if (path.port) options.port = path.port;
-			}
-
-			// If probably local (and no port provided), get port from settings:
-			if (!options.hostname && !options.host && !options.port) {
-				options.port = this.settings.server.port;
-			}
-
-			const request = http.request(options, response => {
-				let responseData = new Buffer([]);
-				response.on('data', data => responseData = Buffer.concat([responseData, data]));
-				response.on('end', end => resolve(responseData));
-			});
-
-			request.on('error', e => resolve(console.error(e)));
-
-			if (options.body) request.write(options.body);
-			request.end();
-		});
-	}
-
-	// Alias for making an HTTP GET request:
-	static async get (path, options = {}) {
-		if ('body' in options) delete options.body;
-		options.method = Router.GET;
-		return await this.request(path, options);
-	}
-
-	// Alias for making an HTTP POST request:
-	static async post (path, options = {}) {
-		options.method = Router.POST;
-		return await this.request(path, options);
 	}
 
 	// Fires every time a request is made:
 	static async __listen__ (request, response) {
 		const route = Router.find(request.url);
-		const query = url.parse(request.url).query
+		const query = url.parse(request.url).query;
+		let actionResponse;
 
-		let cachedResponse;
-		let routeResponse;
+		// No route, attempt to send a file:
+		if (!route) {
+			fs.stat(path.join(process.cwd(), 'dist', request.url), (error, stats) => {
+				// If no file exists, send a 404:
+				if (error) {
+					response.writeHead(404);
+					// Check for the existence of the error/404 route first:
+					if ('/error/404' in http.routes) {
+						const r = http.routes['/error/404'];
+						actionResponse = await (r.controller::r.controller[r.action](request, response));
+						return this.__send__(actionResponse, request, response);
+					}
+					return response.end('404 Not Found');
+				}
+				// If the browser is requesting a range, send Media:
+				if ('range' in request.headers) {
+					const media = new Media(request.url);
+					return media.__send__(request, response);
+				}
+				// FInall, send a File:
+				const file = new File(request.url);
+				return file.__send__(request, response);
+			});
+		}
 
-		// Route exists:
-		if (route) {
-			const actionCache = route.controller[route.action].__cache__;
-			const cacheKey = `Action::${route.controller.constructor.name}.${route.action}${query ? `::${query}` : ``}`;
+		// Request method mismatch:
+		if (request.method.toUpperCase() !== route.method.toUpperCase() || (!(request.method.toUpperCase() in Router))) {
+			response.writeHead(405);
+			if ('/error/405' in http.routes) {
+				const r = http.routes['/error/405'];
+				actionResponse = await (r.controller::r.controller[r.action](request, response));
+				return this.__send__(actionResponse, request, response);
+			}
+			return response.end('405 Invalid HTTP Method');
+		}
 
-			// Wrong request type on route:
-			if (request.method.toUpperCase() !== route.method.toUpperCase()) {
-				response.writeHead(405);
+		actionResponse = await this[`__${request.method.toLowerCase()}__`](route, request, response);
+		this.__send__(actionResponse, request, response);
+	}
+
+	// Handle the sending of a response:
+	static async __send__ (actionResponse, request, response) {
+		// No response, send a 204:
+		if (!actionResponse) {
+			response.writeHead(204);
+			return response.end();
+		}
+
+		// Does the response have a 'send' method?
+		if ('__send__' in actionResponse) {
+			return actionResponse.__send__(request, response);
+		}
+
+		// Is the response a Buffer?
+		if (actionResponse instanceof Buffer) {
+			if ('range' in request.headers) {
+				return new Media(actionResponse).send(request, response);
+			} else {
+				response.writeHead(200, filetype(actionResponse).mime);
+				response.write(actionResponse);
 				return response.end();
 			}
+		} 
 
-			// Action's cache enabled:
-			if (actionCache && actionCache.enabled) {
-				// Find cached response:
-				cachedResponse = await this.remember(cacheKey);
+		// Is the response a string or a number?
+		if (typeof actionResponse === 'string' || typeof actionResponse === 'number') {
+			const dataString = new DataString('text/plain', actionResponse.toString());
+			return dataString.__send__(request, response);
+		}
 
-				// Found cached response:
-				if (cachedResponse) {
-					response.writeHead(200, { 'Content-Type': cachedResponse.mime });
-					response.write(cachedResponse.content);
-					return response.end();
-				}
+		// None of the above? Object? Attempt to send as JSON
+		try {
+			const dataString = new DataString('application/json', JSON.stringify(actionResponse));
+			return dataString.__send__(request, response);
+		} catch (e) {
+			if ('/error/500' in http.routes) {
+				const r = http.routes['/error/405'];
+				actionResponse = await (r.controller::r.controller[r.action](request, response));
+				return this.__send__(actionResponse, request, response);
 			}
-
-			// No cached response found, do action:
-			switch (request.method.toUpperCase()) {
-				// GET:
-				case Router.GET: 
-					routeResponse = await this.__get__(route, request, response); break;
-
-				// POST:
-				case Router.POST: 
-					routeResponse = await this.__post__(route, request, response); break;
-
-				// PUT:
-				case Router.PUT: 
-					routeResponse = await this.__post__(route, request, response); break;
-			}
-
-			// Received a response:
-			if (routeResponse) {
-
-				switch (true) {
-					// String/Text:
-					case typeof routeResponse === 'string': routeResponse = {
-						mime: 'text/plain',
-						content: routeResponse
-					}; break;
-
-					// Number (as text):
-					case typeof routeResponse === 'number': routeResponse = {
-						mime: 'text/plain',
-						content: routeResponse.toString()
-					}; break;
-
-					// View:
-					case routeResponse instanceof View: routeResponse = {
-						mime: 'text/html',
-						content: await routeResponse.render(request, response)
-					}; break;
-
-					// File:
-					case routeResponse instanceof File: routeResponse = {
-						mime: routeResponse.mime,
-						content: await routeResponse.read()
-					}; break;
-
-					// Media:
-					case routeResponse instanceof Media: {
-						return routeResponse.read(request, response);
-					}
-
-					// Buffer:
-					case routeResponse instanceof Buffer: routeResponse = {
-						mime: filetype(routeResponse).mime,
-						content: routeResponse
-					}; break;
-
-					// DataString:
-					case routeResponse instanceof DataString: routeResponse = {
-						mime: routeResponse.mime,
-						content: routeResponse.data.toString()
-					}; break;
-
-					// Session:
-					case routeResponse instanceof Session: {
-						await routeResponse.save(request, response); 
-						routeResponse = {
-							mime: 'application/json',
-							content: JSON.stringify(routeResponse.data)
-						}; 
-					} break;
-
-					// Object (try to send as JSON):
-					case routeResponse instanceof Object: try { 
-						routeResponse = {
-							mime: 'application/json',
-							content: JSON.stringify(routeResponse)
-						}; break;
-					} catch (e) {
-						console.error(e);
-						response.writeHead(500);
-						response.end();
-						return;
-					}
-
-					// Unsupported response:
-					default: {
-						response.writeHead(500);
-						response.end();
-						return;
-					}
-				}
-
-				// If action is cachable, store in redis:
-				if (actionCache && actionCache.enabled) {
-					this.cache(cacheKey, routeResponse, actionCache.maxAge);
-				}
-
-				// Respond:
-				response.writeHead(200, { 'Content-Type': routeResponse.mime });
-				response.write(routeResponse.content);
-				response.end();
-			}
-			// No response, send a 204:
-			else {
-				response.writeHead(204);
-				response.end();
-			}
-		} else {
-
-			if ('range' in request.headers) {
-				const media = new Media(request.url);
-				return media.read(request, response);
-			}
-
-			const file = new File(request.url);
-			const content = await file.read();
-
-			if (content) {
-				response.writeHead({ 'Content-Type': file.mime });
-				response.write(content);
-			} else {
-				response.writeHead(404);
-			}
-
+			response.write(e);
 			response.end();
 		}
 	}
 
 	// Internal GET request handler:
-	static async __get__ (route, request = {}, response = {}) {
-		return new Promise(async resolve => {
+	static async __get__ (route, request, response) {
+		try {
 			const controller = route.controller;
 			const action = controller[route.action];
 			const data = [];
 
-			if ('__query__' in route.data) {
-				request.query = route.data.__query__;
-				delete route.data.__query__;
+			request.controller = controller;
+			request.query = route.data.__query__;
+			delete route.data.__query__;
+
+			// Check requirements/authorization:
+			if (!(await testRequirements(action.requirements))) {
+				if ('/error/401' in http.routes) {
+					const r = http.routes['/error/401'];
+					return await (r.controller::r.controller[r.action](request, response));
+				}
+				return response.end('401 Not Authorized');
 			}
 
 			for (let key in route.data) {
 				data.push(route.data[key]);
 			}
 
-			request.controller = controller;
-
-			const routeResponse = await (controller::action(...data, request, response));
-
-			resolve(routeResponse);
-		});
+			return await (controller::action(...data, request, response));
+		}
+		catch (e) {
+			console.error(e);
+		}
 	}
 
-	// Internal POST/PUT request handler:
-	static async __post__ (route, request = {}, response = {}) {
-		return new Promise(async resolve => {
-			request.on('data', async x => {
-				request.body = x.toString();
+	// Internal POST request handler:
+	static async __post__ (route, request, response) {
+		return new Promise(resolve => {
+			let body = new Buffer([]);
+
+			request.on('data', x => {
+				body = Buffer.concat([body, x]);
+			});
+
+			request.on('end', x => {
+				request.body = body;
 				resolve(this.__get__(route, request, response));
 			});
 		});
+	}
+
+	// Internal PUT request handler:
+	static async __put__ (route, request, response) {
+		// It just uses the post handler...
+		return this.__post__(route, request, response);
 	}
 }
 

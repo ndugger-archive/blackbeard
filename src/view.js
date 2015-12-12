@@ -37,7 +37,7 @@ export default class View {
 
 				try {
 					const template = marko.load(templatePath, view);
-					const session = await Session.retrieve(request, response);
+					const session = await Session.findSession(request, response);
 
 					if (session) {
 						this.data.authenticated = true;
@@ -51,4 +51,12 @@ export default class View {
 			});
 		});
 	}
+
+	async __send__ (request, response) {
+		const view = await this.render(request, response);
+		response.writeHead(response.statusCode, { 'Content-Type': 'text/html' });
+		response.write(view);
+		response.end();
+	}
+
 }

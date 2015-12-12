@@ -108,7 +108,7 @@ export default class MainController {
 
 		<div class='users'>
 
-			<div class='user' for='user in users'>
+			<div class='user' for='user in data.users'>
 				<b>${ user.name }</b>: ${ user.age }
 			</div>
 
@@ -129,12 +129,11 @@ Fixed Bugs
 TODO
 ----
 - Analyze/refactor caching
-- Have each object (DataString, File, Media) self-send a response
+- Reimplement action caching
+- Convert cached Buffer to stream (if Media)
 - Implement proper error logging
-- Implement `requirements` annotation
 - Possibly add more annotations for convenience
 - Build bin commands for setting up project
-- Split up `blackbeard.js` into smaller parts
 - More options in settings file for customizing project structure
 - Possibly add support for swapping template engines
 

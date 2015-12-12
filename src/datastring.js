@@ -5,4 +5,10 @@ export default class DataString {
 		this.data = data;
 	}
 
+	__send__ (request, response) {
+		response.writeHead(200, { 'Content-Type': this.mime });
+		response.write(this.data.toString());
+		response.end();
+	}
+
 }

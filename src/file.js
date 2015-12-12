@@ -1,4 +1,5 @@
 import fs from 'fs';
+import http from 'http';
 import mime from 'mime';
 import path from 'path';
 
@@ -11,19 +12,20 @@ export default class File {
 
 	read () {
 		return new Promise((resolve, reject) => {
-			try {
-				fs.readFile(path.join(process.cwd(), 'dist', this.src), (error, file) => {
-					if (error) {
-						console.error(error);
-						resolve(null);
-					} else {
-						resolve(file);
-					}
-				});
-			} catch (e) {
-				console.error(e);
-				resolve(null);
-			}
+			fs.readFile(path.join(process.cwd(), 'dist', this.src), (error, file) => {
+				if (error) {
+					resolve(null);
+				} else {
+					resolve(file);
+				}
+			});
 		})
+	}
+
+	async __send__ (request, response) {
+		const file = await this.read();
+		response.writeHead(response.statusCode, { 'Content-Type': this.mime });
+		response.write(file);
+		response.end();
 	}
 }

@@ -1,32 +1,29 @@
-import Passport from 'passport';
+export const testRequirements = async (requirements) => {
 
-export const isAuthenticated = (strategy = 'local', options = {}) => {
-	return true;
+	if (!requirements) return true;
+
+	if (!Array.isArray(requirements)) requirements = [requirements];
+
+	let requirementsMet = true;
+	for (let requirement of requirements) {
+		requirementsMet = await requirement(request, response);
+		if (!requirementsMet) break;
+	}
+
+	return requirementsMet;
 }
 
-export default async (rules = []) => {
+export default (rules = []) => {
 
-	if (!Array.isArray(rules)) {
-		rules = [rules];
-	}
-
-	reqsMet = true;
-	for (let rule of rules) {
-		if (typeof rule !== 'boolean') {
-			console.error('Requirements must be of type boolean');
-			break;
-		}
-		if (rule === false) {
-			reqsMet = false;
-			break;
-		}
-	}
-
-	console.log(reqsMet);
+	if (!Array.isArray(rules)) rules = [rules];
 
 	return (controller, action, descriptor) => {
-
-		return descriptor;
-
+		if (action) {
+			descriptor.value.requirements = rules;
+			return descriptor;
+		}
+		else {
+			return controller;
+		}
 	}
 }

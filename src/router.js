@@ -1,15 +1,19 @@
 import http from 'http';
 import path from 'path';
 
+export const GET = 'GET';
+export const POST = 'POST';
+export const PUT = 'PUT';
+
 export default class Router {
 
-	static CONNECT = 'CONNECT';
-	static DELETE = 'DELETE';
-	static GET = 'GET';
-	static HEAD = 'HEAD';
-	static POST = 'POST';
-	static PUT = 'PUT';
-	static TRACE = 'TRACE';
+	//static CONNECT = 'CONNECT';
+	//static DELETE = 'DELETE';
+	static GET = GET;
+	//static HEAD = 'HEAD';
+	static POST = POST;
+	static PUT = PUT;
+	//static TRACE = 'TRACE';
 
 	// To be used as a decorator/annotation on class methods:
 	static MapRoute (url = '/', method = Router.GET) {
