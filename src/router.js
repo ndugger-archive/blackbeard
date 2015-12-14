@@ -29,7 +29,7 @@ export default class Router {
 			if (action) {
 				if (url in routes) url = `dupe:${url}`;
 
-				routes[url] = { action, controller, method };
+				routes[url] = { action, controller, method, data: {} };
 
 				descriptor.value.controller = controller;
 				return descriptor;

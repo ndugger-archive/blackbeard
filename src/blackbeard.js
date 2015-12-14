@@ -88,8 +88,9 @@ export default class Blackbeard {
 	// Start the server on specified port:
 	static async start (port = this.settings.server.port) {
 		try {
-			if (!this.ready && !this.settings) {
-				throw new Error('Server is not ready or cannot find a blackbeard.settings.json file');
+			if (!this.ready || !this.settings) {
+				console.error('No blackbeard.settings.json file found in', process.cwd());
+				throw new Error('Server is not ready or cannot find a valid blackbeard.settings.json file');
 			}
 			// Detect possible duplicate routes:
 			for (let route in http.routes) {
@@ -112,7 +113,7 @@ export default class Blackbeard {
 		http.controllers = {};
 
 		let settings = fs.readFileSync(path.join(process.cwd(), 'blackbeard.settings.json'), 'utf8');
-		if (settings) {
+		if (settings) try {
 			settings = JSON.parse(settings);
 
 			this.ready = true;
@@ -149,52 +150,46 @@ export default class Blackbeard {
 					console.error(e);
 				}
 			}
-		}
-		else {
-			console.error('No blackbeard.settings.json file found in', process.cwd());
+		} catch (e) {
+			console.error(e);
 		}
 	}
 
 	// Fires every time a request is made:
 	static async __listen__ (request, response) {
 		const route = Router.find(request.url);
-		const query = url.parse(request.url).query;
 		let actionResponse;
 
-		// No route, attempt to send a file:
-		if (!route) {
-			fs.stat(path.join(process.cwd(), 'dist', request.url), (error, stats) => {
+		// No route (and method is GET), attempt to send a file:
+		if (!route && request.method.toUpperCase() === Router.GET) {
+			return fs.stat(path.join(process.cwd(), 'dist', request.url), async (error, stats) => {
 				// If no file exists, send a 404:
 				if (error) {
 					response.writeHead(404);
 					// Check for the existence of the error/404 route first:
 					if ('/error/404' in http.routes) {
-						const r = http.routes['/error/404'];
-						actionResponse = await (r.controller::r.controller[r.action](request, response));
-						return this.__send__(actionResponse, request, response);
+						return this.__send__(await this.__get__(http.routes['/error/404'], request, response), request, response);
 					}
-					return response.end('404 Not Found');
+					return response.end('Error 404');
 				}
 				// If the browser is requesting a range, send Media:
 				if ('range' in request.headers) {
 					const media = new Media(request.url);
 					return media.__send__(request, response);
 				}
-				// FInall, send a File:
+				// Finally, send a File:
 				const file = new File(request.url);
 				return file.__send__(request, response);
 			});
 		}
 
-		// Request method mismatch:
+		// Request method mismatch, or method not supported:
 		if (request.method.toUpperCase() !== route.method.toUpperCase() || (!(request.method.toUpperCase() in Router))) {
 			response.writeHead(405);
 			if ('/error/405' in http.routes) {
-				const r = http.routes['/error/405'];
-				actionResponse = await (r.controller::r.controller[r.action](request, response));
-				return this.__send__(actionResponse, request, response);
+				return this.__send__(await this.__get__(http.routes['/error/405'], request, response), request, response);
 			}
-			return response.end('405 Invalid HTTP Method');
+			return response.end('Error 405');
 		}
 
 		actionResponse = await this[`__${request.method.toLowerCase()}__`](route, request, response);
@@ -219,7 +214,7 @@ export default class Blackbeard {
 			if ('range' in request.headers) {
 				return new Media(actionResponse).send(request, response);
 			} else {
-				response.writeHead(200, filetype(actionResponse).mime);
+				response.writeHead(response.statusCode, { 'Content-Type': filetype(actionResponse).mime });
 				response.write(actionResponse);
 				return response.end();
 			}
@@ -231,17 +226,26 @@ export default class Blackbeard {
 			return dataString.__send__(request, response);
 		}
 
+		// Is the response an Error?
+		if (actionResponse instanceof Error) {
+			const code = actionResponse.message || 500;
+			response.writeHead(Number(code) || 500);
+			if (`/error/${code}` in http.routes) {
+				return this.__send__(await this.__get__(http.routes[`/error/${code}`], request, response), request, response);
+			}
+			return response.end(`Error ${code}`);
+		}
+
 		// None of the above? Object? Attempt to send as JSON
 		try {
 			const dataString = new DataString('application/json', JSON.stringify(actionResponse));
 			return dataString.__send__(request, response);
 		} catch (e) {
+			response.writeHead(500);
 			if ('/error/500' in http.routes) {
-				const r = http.routes['/error/405'];
-				actionResponse = await (r.controller::r.controller[r.action](request, response));
-				return this.__send__(actionResponse, request, response);
+				return this.__send__(await this.__get__(http.routes['/error/500'], request, response), request, response);
 			}
-			response.write(e);
+			response.write('Error 500');
 			response.end();
 		}
 	}
@@ -260,17 +264,16 @@ export default class Blackbeard {
 			// Check requirements/authorization:
 			if (!(await testRequirements(action.requirements))) {
 				if ('/error/401' in http.routes) {
-					const r = http.routes['/error/401'];
-					return await (r.controller::r.controller[r.action](request, response));
+					return this.__get__(http.routes['/error/500'], request, response)
 				}
-				return response.end('401 Not Authorized');
+				return response.end('Error 401');
 			}
 
 			for (let key in route.data) {
 				data.push(route.data[key]);
 			}
 
-			return await (controller::action(...data, request, response));
+			return await action(...data, request, response);
 		}
 		catch (e) {
 			console.error(e);

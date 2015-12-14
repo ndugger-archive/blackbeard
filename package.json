@@ -1,7 +1,7 @@
 {
   "name": "blackbeard",
-  "version": "0.0.11-alpha",
-  "description": "Back end Node.js framework built to be familiar, simple, and powerful.",
+  "version": "0.0.13-alpha",
+  "description": "Blackbeard is an opinionated MVC framework for Node.js, designed to be familar.",
   "main": "dist/blackbeard.js",
   "author": "Nick Dugger",
   "license": "MIT",

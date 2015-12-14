@@ -44,7 +44,7 @@ export default class Session {
 	async __send__ (request, response) {
 		await this.save(request, response);
 
-		response.writeHead(200, { 'Content-Type': 'application/json' });
+		response.writeHead(response.statusCode, { 'Content-Type': 'application/json' });
 		response.write(JSON.stringify(this.data));
 		response.end();
 	}

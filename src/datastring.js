@@ -6,7 +6,7 @@ export default class DataString {
 	}
 
 	__send__ (request, response) {
-		response.writeHead(200, { 'Content-Type': this.mime });
+		response.writeHead(response.statusCode, { 'Content-Type': this.mime });
 		response.write(this.data.toString());
 		response.end();
 	}
