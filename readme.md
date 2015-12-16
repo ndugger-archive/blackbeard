@@ -4,9 +4,9 @@ Blackbeard
 ==========
 **Simple, powerful, familiar**
 
-Blackbeard is an opinionated MVC framework for Node.js, designed to be familar.
+Blackbeard is an *opinionated* MVC framework for Node.js, designed to be familar.
 
-Using Redis (*for caching*), Sequelize (*for models/ORM*), and Passport (*for user authentication*), Blackbeard offers a complete solution for developing Node.js applications.
+Using Redis (*for caching & session storage*), and Sequelize (*for models/ORM*), Blackbeard offers a complete solution for developing Node.js applications.
 
 Blackboard currently only supports [Marko](https://www.npmjs.com/package/marko) for templating, but plans to support others are in the pipeline. Suggestions are welcome.
 
@@ -28,6 +28,18 @@ If you'd like to use a database with sequelize, you'll have to install the appro
 
 More in-depth installation instructions will be provided upon beta release.
 
+Features
+--------
+- Models (via sequelize)
+- Views (default via Marko)
+- Controllers
+- Routing
+- Sessions (via Redis)
+- Easy API via Annotations/ Class decorators
+- Built-in Error re-routing/ messaging
+- Simple API for making external requests
+- Very easy to make a RESTful JSON api
+
 Example Usage
 -------------
 
@@ -37,10 +49,11 @@ Blackbeard looks for files in a dist/ folder; you will need to make sure to buil
 
 **src/app.js**
 ```javascript
-import Blackbeard from 'blackbeard';
-import './controllers/maincontroller';
+	import Blackbeard from 'blackbeard';
+	import './models/user';
+	import './controllers/maincontroller';
 
-Blackbeard.start();
+	Blackbeard.start();
 ```
 
 ---
@@ -48,53 +61,53 @@ Blackbeard.start();
 **src/models/user.js**
 
 ```javascript
-import { Model, Schema } from 'blackbeard';
+	import { Model, Schema } from 'blackbeard';
 
-@Model
-export default class User {
-	name = Schema.Text;
-	email = Schema.Text;
-	age = Schema.Integer;
-}
+	@Model
+	export default class User {
+		name = Schema.Text;
+		email = Schema.Text;
+		age = Schema.Integer;
+	}
 ```
 
 ---
 
 **src/controllers/maincontroller.js**
 ```javascript
-import Blackbeard from 'blackbeard';
-import User from '../models/user';
+	import Blackbeard from 'blackbeard';
+	import User from '../models/user';
 
-const Controller = Blackbeard.Controller;
-const Router = Blackbeard.Router;
-const MapRoute = Router.MapRoute;
-const View = Blackbeard.View;
+	const Controller = Blackbeard.Controller;
+	const Router = Blackbeard.Router;
+	const MapRoute = Router.MapRoute;
+	const View = Blackbeard.View;
 
-@Controller
-export default class MainController {
-	
-	@MapRoute('/', Router.GET)
-	async index (request, response) {
-		try {
-			const users = await User.findAll();
-			return new View('index', { users });
-		} catch (e) {
-			console.error(e);
-			return null;
+	@Controller
+	export default class MainController {
+		
+		@MapRoute('/', Router.GET)
+		async index (request, response) {
+			try {
+				const users = await User.findAll();
+				return new View('index', { users });
+			} catch (e) {
+				console.error(e);
+				return null;
+			}
 		}
-	}
 
-	@MapRoute('/foo/{bar}', Router.GET)
-	async foo (bar, request, response) {
-		// ...
-	}
+		@MapRoute('/foo/{bar}', Router.GET)
+		async foo (bar, request, response) {
+			// ...
+		}
 
-	@MapRoute('/foo/{bar}/{baz}', Router.POST)
-	async whatever (bar, baz, request, response) {
-		// posted data accessible via `request.body`
-	}
+		@MapRoute('/foo/{bar}/{baz}', Router.POST)
+		async whatever (bar, baz, request, response) {
+			// posted data accessible via `request.body`
+		}
 
-}
+	}
 ```
 
 ---
@@ -102,20 +115,20 @@ export default class MainController {
 **src/views/main/index.marko**
 
 ```html
-<!doctype html>
-<html>
-	<body>
+	<!doctype html>
+	<html>
+		<body>
 
-		<div class='users'>
+			<div class='users'>
 
-			<div class='user' for='user in data.users'>
-				<b>${ user.name }</b>: ${ user.age }
+				<div class='user' for='user in data.users'>
+					<b>${ user.name }</b>: ${ user.age }
+				</div>
+
 			</div>
 
-		</div>
-
-	</body>
-</html>
+		</body>
+	</html>
 ```
 
 Known Bugs

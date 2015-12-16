@@ -1,4 +1,6 @@
 import CookieJar from 'cookies';
+
+import DataString from './datastring';
 import { rememberFromCache, storeInCache, forgetCachedItem } from './cache';
 
 export default class Session {
@@ -14,7 +16,7 @@ export default class Session {
 	static async findSession (request, response) {
 		return new Promise(async resolve => {
 			const cookies = new CookieJar(request, response);
-			const sessionId = cookies.get(this.cookie);
+			const sessionId = cookies.get(Session.cookie);
 			const session = await rememberFromCache(`Session::${sessionId}`);
 			resolve(session);
 		});
@@ -42,11 +44,9 @@ export default class Session {
 	}
 
 	async __send__ (request, response) {
-		await this.save(request, response);
-
-		response.writeHead(response.statusCode, { 'Content-Type': 'application/json' });
-		response.write(JSON.stringify(this.data));
-		response.end();
+		const session = new DataString('application/json', JSON.stringify(this.data));
+		session.__send__(request, response);
+		this.save(request, response);
 	}
 
 }

@@ -1,6 +1,6 @@
 {
   "name": "blackbeard",
-  "version": "0.0.13-alpha",
+  "version": "0.0.14-alpha",
   "description": "Blackbeard is an opinionated MVC framework for Node.js, designed to be familar.",
   "main": "dist/blackbeard.js",
   "author": "Nick Dugger",

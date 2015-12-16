@@ -21,14 +21,10 @@ import _File from './file';
 import _Media from './media';
 import _Model from './model';
 import _Request from './request';
-import _Requirements, {
-	testRequirements
-} from './requirements';
+import _Requirements from './requirements';
 import _Router from './router';
 import _Session from './session';
 import _View from './view';
-
-import { skullXBones } from './ascii';
 
 // Convenient exports:
 export const Cache = _Cache;
@@ -66,6 +62,7 @@ export const Schema = {
 
 // Arrgghh, matey!
 export default class Blackbeard {
+	
 	// Blackbeard objects:
 	static Cache = Cache;
 	static Controller = Controller;
@@ -89,18 +86,19 @@ export default class Blackbeard {
 	static async start (port = this.settings.server.port) {
 		try {
 			if (!this.ready || !this.settings) {
-				console.error('No blackbeard.settings.json file found in', process.cwd());
-				throw new Error('Server is not ready or cannot find a valid blackbeard.settings.json file');
+				throw new Error(`Server is not ready or cannot find a valid blackbeard.settings.json file in ${process.cwd()}`);
 			}
 			// Detect possible duplicate routes:
 			for (let route in http.routes) {
 				if (route.match(/dupe:/)) throw new TypeError(`There are multiple routes with the path of ${route.replace(/dupe:/, '')}`);
 			}
 			// Apply the port to the Request class for future use:
-			if (port) Request.server.port = port;
+			if (port) http.currentPort = port;
 			// Start the actual HTTP server:
 			http.createServer((request, response) => this.__listen__(request, response)).listen(port);
-			console.info(`${skullXBones}\n\nBlackbeard is now sailing on port ${port}\n\n`);
+			const msg = `|Blackbeard is now sailing on port ${port}|`
+			const style= 'color: blue; font-weight: bold;'
+			console.info(`%c ${new Array(msg.length+1).join('_')}\n ${msg}\n ${new Array(msg.length+1).join('‾')}`, style);
 		}
 		catch (e) {
 			console.error(e);
@@ -111,16 +109,15 @@ export default class Blackbeard {
 	static __setup__ () {
 		http.routes = {};
 		http.controllers = {};
+		http.STATUS_CODES[420] = 'Smoke weed everyday';
 
 		let settings = fs.readFileSync(path.join(process.cwd(), 'blackbeard.settings.json'), 'utf8');
 		if (settings) try {
 			settings = JSON.parse(settings);
-
 			this.ready = true;
 			this.settings = settings;
-
+			// If settings has server, apply the server settings to the Request class:
 			if ('server' in settings) Request.server = settings.server;
-
 			// Connect to the database:
 			if ('database' in settings) {
 				try {
@@ -131,7 +128,8 @@ export default class Blackbeard {
 						{
 							dialect: settings.database.engine,
 							host: settings.database.host,
-							port: settings.database.port
+							port: settings.database.port,
+							logging: null
 						}
 					);
 				} catch (e) {
@@ -139,7 +137,6 @@ export default class Blackbeard {
 					console.error(e);
 				}
 			}
-
 			// Connect to redis server (for caching):
 			if ('server' in settings && 'cache' in settings.server && settings.server.cache.enabled) {
 				try {
@@ -161,7 +158,7 @@ export default class Blackbeard {
 		let actionResponse;
 
 		// No route (and method is GET), attempt to send a file:
-		if (!route && request.method.toUpperCase() === Router.GET) {
+		if (!route) {
 			return fs.stat(path.join(process.cwd(), 'dist', request.url), async (error, stats) => {
 				// If no file exists, send a 404:
 				if (error) {
@@ -170,7 +167,7 @@ export default class Blackbeard {
 					if ('/error/404' in http.routes) {
 						return this.__send__(await this.__get__(http.routes['/error/404'], request, response), request, response);
 					}
-					return response.end('Error 404');
+					return response.end(`Error 404 - ${http.STATUS_CODES[404]}`);
 				}
 				// If the browser is requesting a range, send Media:
 				if ('range' in request.headers) {
@@ -182,16 +179,14 @@ export default class Blackbeard {
 				return file.__send__(request, response);
 			});
 		}
-
 		// Request method mismatch, or method not supported:
 		if (request.method.toUpperCase() !== route.method.toUpperCase() || (!(request.method.toUpperCase() in Router))) {
 			response.writeHead(405);
 			if ('/error/405' in http.routes) {
 				return this.__send__(await this.__get__(http.routes['/error/405'], request, response), request, response);
 			}
-			return response.end('Error 405');
+			return response.end(`Error 405 - ${http.STATUS_CODES[405]}`);
 		}
-
 		actionResponse = await this[`__${request.method.toLowerCase()}__`](route, request, response);
 		this.__send__(actionResponse, request, response);
 	}
@@ -203,12 +198,10 @@ export default class Blackbeard {
 			response.writeHead(204);
 			return response.end();
 		}
-
 		// Does the response have a 'send' method?
 		if ('__send__' in actionResponse) {
 			return actionResponse.__send__(request, response);
 		}
-
 		// Is the response a Buffer?
 		if (actionResponse instanceof Buffer) {
 			if ('range' in request.headers) {
@@ -218,14 +211,12 @@ export default class Blackbeard {
 				response.write(actionResponse);
 				return response.end();
 			}
-		} 
-
+		}
 		// Is the response a string or a number?
 		if (typeof actionResponse === 'string' || typeof actionResponse === 'number') {
-			const dataString = new DataString('text/plain', actionResponse.toString());
+			const dataString = new DataString('text/plain', actionResponse);
 			return dataString.__send__(request, response);
 		}
-
 		// Is the response an Error?
 		if (actionResponse instanceof Error) {
 			const code = actionResponse.message || 500;
@@ -233,9 +224,8 @@ export default class Blackbeard {
 			if (`/error/${code}` in http.routes) {
 				return this.__send__(await this.__get__(http.routes[`/error/${code}`], request, response), request, response);
 			}
-			return response.end(`Error ${code}`);
+			return response.end(`Error ${code} - ${http.STATUS_CODES[code] || http.STATUS_CODES[500]}`);
 		}
-
 		// None of the above? Object? Attempt to send as JSON
 		try {
 			const dataString = new DataString('application/json', JSON.stringify(actionResponse));
@@ -245,7 +235,7 @@ export default class Blackbeard {
 			if ('/error/500' in http.routes) {
 				return this.__send__(await this.__get__(http.routes['/error/500'], request, response), request, response);
 			}
-			response.write('Error 500');
+			response.write(`Error 500 - ${http.STATUS_CODES[500]}`);
 			response.end();
 		}
 	}
@@ -262,17 +252,19 @@ export default class Blackbeard {
 			delete route.data.__query__;
 
 			// Check requirements/authorization:
-			if (!(await testRequirements(action.requirements))) {
-				if ('/error/401' in http.routes) {
-					return this.__get__(http.routes['/error/500'], request, response)
+			if ('requirements' in action) for (let requirement of action.requirements) {
+				if (!(await requirement(request, response))) {
+					response.writeHead(401);
+					if ('/error/401' in http.routes) {
+						return this.__get__(http.routes['/error/401'], request, response)
+					}
+					return response.end(`Error 401 - ${http.STATUS_CODES[401]}`);
 				}
-				return response.end('Error 401');
 			}
-
+			// Turn data into an aray, and then spread it as arguments of the action:
 			for (let key in route.data) {
 				data.push(route.data[key]);
 			}
-
 			return await action(...data, request, response);
 		}
 		catch (e) {
@@ -284,11 +276,12 @@ export default class Blackbeard {
 	static async __post__ (route, request, response) {
 		return new Promise(resolve => {
 			let body = new Buffer([]);
-
 			request.on('data', x => {
 				body = Buffer.concat([body, x]);
 			});
-
+			request.on('error', e => {
+				resolve(new Error(500));
+			});
 			request.on('end', x => {
 				request.body = body;
 				resolve(this.__get__(route, request, response));

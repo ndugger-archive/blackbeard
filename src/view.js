@@ -3,6 +3,7 @@ import http from 'http';
 import path from 'path';
 import marko from 'marko';
 
+import Request from './request';
 import Session from './session';
 
 export default class View {
@@ -25,14 +26,13 @@ export default class View {
 			}
 		}
 
-		return new Promise((resolve, reject) => {
+		return new Promise(resolve => {
 			const templatePath = `${path.join(views, this.path)}.marko`;
 
 			fs.readFile(templatePath, 'utf8', async (error, view) => {
 
-				if (error) {
-					console.error(error);
-					return resolve(null);
+				if (error || !view) {
+					return resolve(error);
 				}
 
 				try {
@@ -54,6 +54,17 @@ export default class View {
 
 	async __send__ (request, response) {
 		const view = await this.render(request, response);
+
+		if (!view || view instanceof Error) {
+			response.writeHead(500);
+			if ('/error/500' in http.routes) {
+				const error = new Request('/error/500', { headers: request.headers });
+				response.write(await error.get());
+				return response.end();
+			}
+			return response.end(`Error 500 - ${http.STATUS_CODES[500]}`);
+		}
+
 		response.writeHead(response.statusCode, { 'Content-Type': 'text/html' });
 		response.write(view);
 		response.end();

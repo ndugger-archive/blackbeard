@@ -1,9 +1,12 @@
 import fs from 'fs';
+import http from 'http';
 import path from 'path';
 import stream from 'stream';
 
 import mime from 'mime';
 import filetype from 'file-type';
+
+import Request from './request';
 
 const { Readable } = stream;
 
@@ -27,7 +30,6 @@ export default class Media {
 			fs.stat(file, (error, stats) => {
 
 				if (error) {
-					console.error(error);
 					stats = { size: 0 };
 				}
 
@@ -40,6 +42,17 @@ export default class Media {
 	async __send__ (request, response) {
 		const { range } = request.headers;
 		const { size } = await this.stats(request);
+
+		if (!size) {
+			response.writeHead(404);
+			if ('/error/404' in http.routes) {
+				const error = new Request('/error/404', { headers: request.headers });
+				response.write(await error.get());
+				return response.end();
+			}
+			return response.end(`Error 404 - ${http.STATUS_CODES[404]}`);
+		}
+
 		const positions = range.replace(/bytes=/, '').split('-');
 		const start = Number(positions[0]);
 		const end = positions[1] ? Number(positions[1]) : size - 1;
