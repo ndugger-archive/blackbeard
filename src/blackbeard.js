@@ -109,8 +109,8 @@ export default class Blackbeard {
 			http.globalAgent.currentPort = port;
 			// Start the actual HTTP server:
 			http.createServer((request, response) => this.__listen__(request, response)).listen(port);
-			
-			const msg = `  Blackbeard is now sailing on port ${port}  `
+
+			const msg = `  Blackbeard is now sailing on port ${port}  `;
 			console.info(`|${new Array(msg.length+1).join('‾')}|\n|${msg}|\n|${new Array(msg.length+1).join('_')}|\n\n`);
 		}
 		catch (e) {

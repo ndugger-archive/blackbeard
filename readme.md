@@ -10,7 +10,7 @@ Using Redis (*for caching & session storage*), and Sequelize (*for models/ORM*),
 
 Blackbeard currently only supports [Marko](https://www.npmjs.com/package/marko) for templating, but plans to support others are in the pipeline. Suggestions are welcome.
 
-**Current version:** 0.0.10-alpha
+**Current version:** 0.0.15-alpha
 
 - [Installation](#installation)
 - [Example usage](#example-usage)
