@@ -44,7 +44,7 @@ export default class Router {
 
 					if (routeControllerName === controller.name) {
 						const newRoute = path.join(url, route.replace(/dupe:/, ''));
-						if (newRoute in routes) throw new TypeError(`Route already exists for ${newRoute}`);
+						if (newRoute in routes) throw new Error(`Route already exists for ${newRoute}`);
 						reRoutes[newRoute] = routes[route];
 					} else {
 						reRoutes[route] = routes[route];
@@ -61,25 +61,20 @@ export default class Router {
 	// Compare a URL to our collection of routes:
 	static find (url) {
 		const routes = http.routes;
-
-		// Will hold the found route:
-		let found;
-
 		// The address query string:
 		const query = url.split('?')[1];
-
+		// Regex to find variables in route:
+		const pattern = /\{(.*)\}/;
+		
+		// Will hold the found route:
+		let found;
 		// Allow trailing slash to be optional:
 		url = url.split('?')[0].replace(/\/$/, '') || '/';
 
-		// Regex to find variables in route:
-		const pattern = /\{(.*)\}/;
-
 		// Loop through all routes to match against url:
 		for (let route in routes) {
-
 			// Allow trailing slash to be optional:
 			route = route.replace(/\/$/, '') || '/';
-
 			// Collection of discovered variables:
 			let vars = {};
 
@@ -90,13 +85,10 @@ export default class Router {
 
 			// Route contains variables:
 			if (route.match(pattern)) {
-
 				// Route is compatable:
 				if (route.split('/').length === url.split('/').length) {
-
 					// Keep track of the index:
 					let i = 0;
-
 					// split route on each dir, then loop:
 					for (let dir of route.split('/')) {
 
@@ -109,7 +101,6 @@ export default class Router {
 							break;
 						}
 					}
-
 					// Found correct route:
 					if (Object.keys(vars).length) {
 						found = routes[route];
@@ -128,7 +119,6 @@ export default class Router {
 					vars.__query__[key] = value;
 				});
 			}
-
 			// Add the vars to the route as 'data':
 			found.data = vars;
 

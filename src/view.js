@@ -3,6 +3,8 @@ import http from 'http';
 import path from 'path';
 import marko from 'marko';
 
+import log from './log';
+
 import Request from './request';
 import Session from './session';
 
@@ -13,7 +15,7 @@ export default class View {
 		this.data = data;
 	}
 
-	render (request, response) {
+	async __render__ (request, response) {
 		const { controller } = request;
 		const { controllers } = http;
 
@@ -26,44 +28,24 @@ export default class View {
 			}
 		}
 
-		return new Promise(resolve => {
-			const templatePath = `${path.join(views, this.path)}.marko`;
+		const templatePath = `${path.join(views, this.path)}.marko`;
+		const view = await fs.readFileAsync(templatePath, 'utf8');
+		const template = marko.load(templatePath, view);
+		const session = request.session;
 
-			fs.readFile(templatePath, 'utf8', async (error, view) => {
+		if (session) {
+			this.data.authenticated = true;
+			this.data.session = session;
+		}
 
-				if (error || !view) {
-					return resolve(error);
-				}
-
-				try {
-					const template = marko.load(templatePath, view);
-					const session = await Session.findSession(request, response);
-
-					if (session) {
-						this.data.authenticated = true;
-						this.data.session = session;
-					}
-
-					template.render(this.data, (error, html) => error ? console.error(error) : resolve(html));
-				} catch (e) {
-					console.error(e);
-				}
-			});
-		});
+		return new Promise((resolve, reject) => template.render(this.data, (error, html) => {
+			if (error) return reject(error);
+			resolve(html);
+		}));
 	}
 
 	async __send__ (request, response) {
-		const view = await this.render(request, response);
-
-		if (!view || view instanceof Error) {
-			response.writeHead(500);
-			if ('/error/500' in http.routes) {
-				const error = new Request('/error/500', { headers: request.headers });
-				response.write(await error.get());
-				return response.end();
-			}
-			return response.end(`Error 500 - ${http.STATUS_CODES[500]}`);
-		}
+		const view = await this.__render__(request, response);
 
 		response.writeHead(response.statusCode, { 'Content-Type': 'text/html' });
 		response.write(view);

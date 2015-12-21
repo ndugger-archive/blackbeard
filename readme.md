@@ -8,7 +8,7 @@ Blackbeard is an *opinionated* MVC framework for Node.js, designed to be familar
 
 Using Redis (*for caching & session storage*), and Sequelize (*for models/ORM*), Blackbeard offers a complete solution for developing Node.js applications.
 
-Blackboard currently only supports [Marko](https://www.npmjs.com/package/marko) for templating, but plans to support others are in the pipeline. Suggestions are welcome.
+Blackbeard currently only supports [Marko](https://www.npmjs.com/package/marko) for templating, but plans to support others are in the pipeline. Suggestions are welcome.
 
 **Current version:** 0.0.10-alpha
 
@@ -144,7 +144,6 @@ TODO
 - Analyze/refactor caching
 - Reimplement action caching
 - Convert cached Buffer to stream (if Media)
-- Implement proper error logging
 - Possibly add more annotations for convenience
 - Build bin commands for setting up project
 - More options in settings file for customizing project structure

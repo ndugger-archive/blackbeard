@@ -1,5 +1,7 @@
 import CookieJar from 'cookies';
 
+import log from './log';
+
 import DataString from './datastring';
 import { rememberFromCache, storeInCache, forgetCachedItem } from './cache';
 
@@ -35,18 +37,15 @@ export default class Session {
 		const cookies = new CookieJar(request, response);
 		const maxAge = 60 * 60 * 24 * 14;
 
-		try {
-			cookies.set(Session.cookie, this.id, { maxAge: maxAge * 1000 });
-			await storeInCache(`Session::${this.id}`, this.data, maxAge);
-		} catch (e) {
-			console.error(e);
-		}
+		cookies.set(Session.cookie, this.id, { maxAge: maxAge * 1000 });
+		await storeInCache(`Session::${this.id}`, this.data, maxAge);
 	}
 
 	async __send__ (request, response) {
 		const session = new DataString('application/json', JSON.stringify(this.data));
+		
+		await this.save(request, response);
 		session.__send__(request, response);
-		this.save(request, response);
 	}
 
 }

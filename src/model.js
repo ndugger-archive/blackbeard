@@ -19,7 +19,7 @@ function overwrite (name, remember) {
 				key += x ? JSON.stringify(arguments) : '';
 				const cached = await rememberFromCache(key);
 				if (cached) {
-					resolve(cached)
+					resolve(cached);
 				} else {
 					resolve(original(...arguments).then(results => storeInCache(key, results, maxAge)));
 				}

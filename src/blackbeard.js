@@ -7,7 +7,7 @@ import url from 'url';
 // Dependencies:
 import db from 'sequelize';
 import filetype from 'file-type';
-import redis from 'redis';
+import Redis from 'redis';
 
 // Blackbeard modules:
 import _Cache, {
@@ -17,6 +17,7 @@ import _Cache, {
 } from './cache';
 import _Controller from './controller';
 import _DataString from './datastring';
+import _EnableCORS from './enablecors';
 import _File from './file';
 import _Media from './media';
 import _Model from './model';
@@ -26,10 +27,18 @@ import _Router from './router';
 import _Session from './session';
 import _View from './view';
 
+// Custom error logging:
+import log from './log';
+
+// Bluebird & promisify the fs API:
+import Promise from 'bluebird';
+Promise.promisifyAll(fs);
+
 // Convenient exports:
 export const Cache = _Cache;
 export const Controller = _Controller;
 export const DataString = _DataString;
+export const EnableCORS = _EnableCORS;
 export const File = _File;
 export const Media = _Media;
 export const Model = _Model;
@@ -67,6 +76,7 @@ export default class Blackbeard {
 	static Cache = Cache;
 	static Controller = Controller;
 	static DataString = DataString;
+	static EnableCORS = EnableCORS;
 	static File = File;
 	static Media = Media;
 	static Model = Model;
@@ -77,118 +87,108 @@ export default class Blackbeard {
 	static View = View;
 	static Schema = Schema;
 
+	static log = log;
+
 	static ready = false;
-	static settings = {
-		server: { port: 80 }
-	};
+	static settings = { server: { port: http.globalAgent.defaultPort } };
 
 	// Start the server on specified port:
 	static async start (port = this.settings.server.port) {
+
+		console.info('Shivering me timbers (starting server)...')
+
 		try {
 			if (!this.ready || !this.settings) {
-				throw new Error(`Server is not ready or cannot find a valid blackbeard.settings.json file in ${process.cwd()}`);
+				throw new Error(`Server is not ready or cannot find a valid blackbeard.config file in ${process.cwd()}`);
 			}
 			// Detect possible duplicate routes:
 			for (let route in http.routes) {
 				if (route.match(/dupe:/)) throw new TypeError(`There are multiple routes with the path of ${route.replace(/dupe:/, '')}`);
 			}
-			// Apply the port to the Request class for future use:
-			if (port) http.currentPort = port;
+			// Apply the port http for future use:
+			http.globalAgent.currentPort = port;
 			// Start the actual HTTP server:
 			http.createServer((request, response) => this.__listen__(request, response)).listen(port);
-			const msg = `|Blackbeard is now sailing on port ${port}|`
-			const style= 'color: blue; font-weight: bold;'
-			console.info(`%c ${new Array(msg.length+1).join('_')}\n ${msg}\n ${new Array(msg.length+1).join('‾')}`, style);
+			
+			const msg = `  Blackbeard is now sailing on port ${port}  `
+			console.info(`|${new Array(msg.length+1).join('‾')}|\n|${msg}|\n|${new Array(msg.length+1).join('_')}|\n\n`);
 		}
 		catch (e) {
-			console.error(e);
+			log('error', e, 'Blackbeard.start');
 		}
 	}
 
 	// Setup upon module inclusion (before server starts):
 	static __setup__ () {
+
+		console.info('Charting course (running setup)...');
+
 		http.routes = {};
 		http.controllers = {};
-		http.STATUS_CODES[420] = 'Smoke weed everyday';
+		http.STATUS_CODES[420] = 'Smoke Weed Everyday';
 
-		let settings = fs.readFileSync(path.join(process.cwd(), 'blackbeard.settings.json'), 'utf8');
+		let settings = fs.readFileSync(path.join(process.cwd(), 'blackbeard.config'), 'utf8');
+
 		if (settings) try {
 			settings = JSON.parse(settings);
 			this.ready = true;
 			this.settings = settings;
-			// If settings has server, apply the server settings to the Request class:
-			if ('server' in settings) Request.server = settings.server;
+
 			// Connect to the database:
-			if ('database' in settings) {
-				try {
-					global.database = new db(
-						settings.database.database,
-						settings.database.username,
-						settings.database.password,
-						{
-							dialect: settings.database.engine,
-							host: settings.database.host,
-							port: settings.database.port,
-							logging: null
-						}
-					);
-				} catch (e) {
-					global.database = null;
-					console.error(e);
+			if ('database' in settings) global.database = new db(
+				settings.database.database,
+				settings.database.username,
+				settings.database.password,
+				{
+					dialect: settings.database.engine,
+					host: settings.database.host,
+					port: settings.database.port,
+					logging: null
 				}
+			);
+
+			// Connect to Redis server (for caching):
+			if ('server' in settings && 'cache' in settings.server) {
+				http.cache = Redis.createClient();
+				http.cache.defaultMaxAge = settings.server.cache.maxAge || 0;
 			}
-			// Connect to redis server (for caching):
-			if ('server' in settings && 'cache' in settings.server && settings.server.cache.enabled) {
-				try {
-					http.cache = redis.createClient();
-					http.cache.defaultMaxAge = settings.server.cache.maxAge || 0;
-				} catch (e) {
-					http.cache = null;
-					console.error(e);
-				}
-			}
-		} catch (e) {
-			console.error(e);
+		}
+		catch (e) {
+			this.ready = false;
+			global.database = null;
+			http.cache = null;
+			log('error', e, 'Blackbeard.__setup__');
 		}
 	}
 
 	// Fires every time a request is made:
 	static async __listen__ (request, response) {
 		const route = Router.find(request.url);
-		let actionResponse;
 
 		// No route (and method is GET), attempt to send a file:
-		if (!route) {
-			return fs.stat(path.join(process.cwd(), 'dist', request.url), async (error, stats) => {
-				// If no file exists, send a 404:
-				if (error) {
-					response.writeHead(404);
-					// Check for the existence of the error/404 route first:
-					if ('/error/404' in http.routes) {
-						return this.__send__(await this.__get__(http.routes['/error/404'], request, response), request, response);
-					}
-					return response.end(`Error 404 - ${http.STATUS_CODES[404]}`);
-				}
-				// If the browser is requesting a range, send Media:
-				if ('range' in request.headers) {
-					const media = new Media(request.url);
-					return media.__send__(request, response);
-				}
-				// Finally, send a File:
-				const file = new File(request.url);
-				return file.__send__(request, response);
-			});
+		if (!route) try {
+			await fs.statAsync(path.join(process.cwd(), 'dist', request.url));
+			if ('range' in request.headers) {
+				return new Media(request.url).__send__(request, response);
+			}
+			return new File(request.url).__send__(request, response);
 		}
+		catch (e) {
+			return this.__err__(404, e, request, response);
+		}
+
 		// Request method mismatch, or method not supported:
 		if (request.method.toUpperCase() !== route.method.toUpperCase() || (!(request.method.toUpperCase() in Router))) {
-			response.writeHead(405);
-			if ('/error/405' in http.routes) {
-				return this.__send__(await this.__get__(http.routes['/error/405'], request, response), request, response);
-			}
-			return response.end(`Error 405 - ${http.STATUS_CODES[405]}`);
+			return this.__err__(405, http.STATUS_CODES[405], request, response);
 		}
-		actionResponse = await this[`__${request.method.toLowerCase()}__`](route, request, response);
-		this.__send__(actionResponse, request, response);
+
+		try {
+			let actionResponse = await this[`__${request.method.toLowerCase()}__`](route, request, response);
+			return this.__send__(actionResponse, request, response);
+		}
+		catch (e) {
+			return this.__err__(500, e, request, response);
+		}
 	}
 
 	// Handle the sending of a response:
@@ -198,90 +198,89 @@ export default class Blackbeard {
 			response.writeHead(204);
 			return response.end();
 		}
+
 		// Does the response have a 'send' method?
-		if ('__send__' in actionResponse) {
-			return actionResponse.__send__(request, response);
+		if ('__send__' in actionResponse) try {
+			return await actionResponse.__send__(request, response);
 		}
+		catch (e) {
+			actionResponse = new Error(e);
+		}
+
+		// Is the response an Error?
+		if (actionResponse instanceof Error) return this.__err__(500, actionResponse.message, request, response);
+
 		// Is the response a Buffer?
 		if (actionResponse instanceof Buffer) {
 			if ('range' in request.headers) {
-				return new Media(actionResponse).send(request, response);
-			} else {
-				response.writeHead(response.statusCode, { 'Content-Type': filetype(actionResponse).mime });
-				response.write(actionResponse);
-				return response.end();
+				return new Media(actionResponse).__send__(request, response);
 			}
+			response.writeHead(response.statusCode, { 'Content-Type': filetype(actionResponse).mime });
+			return response.end(actionResponse);
 		}
+
 		// Is the response a string or a number?
 		if (typeof actionResponse === 'string' || typeof actionResponse === 'number') {
-			const dataString = new DataString('text/plain', actionResponse);
-			return dataString.__send__(request, response);
+			return new DataString('text/plain', actionResponse).__send__(request, response);
 		}
-		// Is the response an Error?
-		if (actionResponse instanceof Error) {
-			const code = actionResponse.message || 500;
-			response.writeHead(Number(code) || 500);
-			if (`/error/${code}` in http.routes) {
-				return this.__send__(await this.__get__(http.routes[`/error/${code}`], request, response), request, response);
-			}
-			return response.end(`Error ${code} - ${http.STATUS_CODES[code] || http.STATUS_CODES[500]}`);
-		}
-		// None of the above? Object? Attempt to send as JSON
+
+		// None of the above? Attempt to send as JSON
 		try {
-			const dataString = new DataString('application/json', JSON.stringify(actionResponse));
-			return dataString.__send__(request, response);
-		} catch (e) {
-			response.writeHead(500);
-			if ('/error/500' in http.routes) {
-				return this.__send__(await this.__get__(http.routes['/error/500'], request, response), request, response);
-			}
-			response.write(`Error 500 - ${http.STATUS_CODES[500]}`);
-			response.end();
+			return new DataString('application/json', JSON.stringify(actionResponse)).__send__(request, response);
+		}
+		catch (e) {
+			return this.__err__(500, e, request, response);
+		}
+	}
+
+	// Error handler:
+	static async __err__ (code, error, request, response) {
+		log('error', code, request.url);
+		response.statusCode = Number(code) || 500;
+
+		if (this.settings.debug) console.error(code, error);
+
+		try {
+			const actionResponse = await this.__get__(http.routes[`/error/${code}`], request, response);
+			this.__send__(actionResponse, request, response);
+		}
+		catch (e) {
+			log('warning', 404, `/error/${code}`);
+			return response.end(`${code} Error - ${error || http.STATUS_CODES[code]}`);
 		}
 	}
 
 	// Internal GET request handler:
 	static async __get__ (route, request, response) {
-		try {
-			const controller = route.controller;
-			const action = controller[route.action];
-			const data = [];
+		const controller = route.controller;
+		const action = controller[route.action];
+		const data = [];
 
-			request.controller = controller;
-			request.query = route.data.__query__;
-			delete route.data.__query__;
+		request.session = await Session.findSession(request, response);
+		request.controller = controller;
+		request.query = route.data.__query__;
+		delete route.data.__query__;
 
-			// Check requirements/authorization:
-			if ('requirements' in action) for (let requirement of action.requirements) {
-				if (!(await requirement(request, response))) {
-					response.writeHead(401);
-					if ('/error/401' in http.routes) {
-						return this.__get__(http.routes['/error/401'], request, response)
-					}
-					return response.end(`Error 401 - ${http.STATUS_CODES[401]}`);
-				}
-			}
-			// Turn data into an aray, and then spread it as arguments of the action:
-			for (let key in route.data) {
-				data.push(route.data[key]);
-			}
-			return await action(...data, request, response);
+		if ('__cors__' in controller) response.setHeader('Access-Control-Allow-Origin', controller.__cors__);
+		if ('__cors__' in action) response.setHeader('Access-Control-Allow-Origin', action.__cors__);
+
+		// Check requirements/authorization:
+		if ('requirements' in action) for (let requirement of action.requirements) {
+			if (!(await requirement(request, response))) return this.__err__(401, http.STATUS_CODES[401], request, response);
 		}
-		catch (e) {
-			console.error(e);
-		}
+
+		// Turn data into an aray, and then spread it as arguments for the action:
+		for (let key in route.data) data.push(route.data[key]);
+
+		return await action(...data, request, response);
 	}
 
 	// Internal POST request handler:
 	static async __post__ (route, request, response) {
-		return new Promise(resolve => {
+		return new Promise((resolve, reject) => {
 			let body = new Buffer([]);
-			request.on('data', x => {
-				body = Buffer.concat([body, x]);
-			});
-			request.on('error', e => {
-				resolve(new Error(500));
-			});
+			request.on('error', e => reject(e));
+			request.on('data', x => { body = Buffer.concat([body, x]) });
 			request.on('end', x => {
 				request.body = body;
 				resolve(this.__get__(route, request, response));
@@ -289,9 +288,8 @@ export default class Blackbeard {
 		});
 	}
 
-	// Internal PUT request handler:
+	// Internal PUT request handler (uses post handler):
 	static async __put__ (route, request, response) {
-		// It just uses the post handler...
 		return this.__post__(route, request, response);
 	}
 }

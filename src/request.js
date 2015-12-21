@@ -1,6 +1,8 @@
 import http from 'http';
 import url from 'url';
 
+import log from './log';
+
 import { GET, POST } from './router';
 
 export default class Request {
@@ -17,10 +19,10 @@ export default class Request {
 				if (path.port) this.options.port = path.port;
 			}
 
-			else this.options.port = http.currentPort;
+			else this.options.port = http.globalAgent.currentPort;
 
 		} catch (e) {
-			console.error(e);
+			log('error', e, path);
 		}
 	}
 
@@ -36,7 +38,7 @@ export default class Request {
 				request.on('error', e => { throw new Error(e) });
 				request.end();
 			} catch (e) {
-				console.error(e);
+				log('error', e, this.options.hostname + this.options.path);
 			}
 		});
 	}
