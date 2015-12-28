@@ -3,8 +3,8 @@ import {storeInCache, rememberFromCache, forgetCachedItem} from './cache';
 
 const { cache } = http;
 
-function overwrite (name, remember) {
-	return function (x) {
+function overwrite (name, find) {
+	return function (query) {
 		const model = this;
 		const original = this::this.__proto__[name];
 
@@ -15,16 +15,25 @@ function overwrite (name, remember) {
 		return new Promise(async resolve => {
 			const { maxAge } = model.__cache__;
 			let key = `Model::${model.name}`;
-			if (remember) {
-				key += x ? JSON.stringify(arguments) : '';
-				const cached = await rememberFromCache(key);
-				if (cached) {
-					resolve(cached);
-				} else {
-					resolve(original(...arguments).then(results => storeInCache(key, results, maxAge)));
+
+			switch (name) {
+
+				case 'destroy':
+				case 'update': {
+					return resolve(forgetCachedItem(new RegExp(key)).then(original(...arguments)));
 				}
-			} else {
-				resolve(forgetCachedItem(new RegExp(key)).then(original(...arguments)));
+
+				default: if (find) {
+					key += query ? JSON.stringify(query) : '';
+					const cached = await rememberFromCache(key);
+					if (cached) {
+						resolve(cached);
+					} else {
+						resolve(original(...arguments).then(results => storeInCache(key, results, maxAge)));
+					}
+				} else {
+					resolve(original(...arguments));
+				}
 			}
 		});
 	}

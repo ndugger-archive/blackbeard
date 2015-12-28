@@ -1,8 +1,11 @@
 {
   "name": "blackbeard",
-  "version": "0.0.15-alpha",
+  "version": "0.0.16-alpha",
   "description": "Blackbeard is an opinionated MVC framework for Node.js, designed to be familar.",
   "main": "dist/blackbeard.js",
+  "bin": {
+    "blackbeard": "./bin/setup.js"
+  },
   "author": "Nick Dugger",
   "license": "MIT",
   "repository": {
@@ -23,6 +26,7 @@
   },
   "dependencies": {
     "bluebird": "^3.1.1",
+    "commander": "^2.9.0",
     "cookies": "^0.5.1",
     "file-type": "^3.1.0",
     "marko": "^2.7.29",

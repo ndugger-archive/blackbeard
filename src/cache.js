@@ -17,12 +17,18 @@ export const rememberFromCache = key => {
 	return new Promise(resolve => {
 		http.cache.get(key, (error, result) => {
 			if (result) {
-				result = JSON.parse(result);
-				if (result.content && result.content.data && result.content.type === 'Buffer') {
-					result.content = new Buffer(result.content.data);
+				try {
+					result = JSON.parse(result);
+					if (result.content && result.content.data && result.content.type === 'Buffer') {
+						result.content = new Buffer(result.content.data);
+					}
+					resolve(result);
 				}
-				resolve(result);
-			} else {
+				catch (e) {
+					resolve(result);
+				}
+			}
+			else {
 				resolve(null);
 			}
 		})
@@ -69,7 +75,7 @@ export default (seconds, a, b) => {
 			return descriptor;
 		}
 
-		if (global.database && object instanceof global.database.Model) {
+		if (object instanceof global.database.Model) {
 			object.__cache__ = {
 				enabled: true,
 				maxAge: seconds
@@ -89,7 +95,7 @@ export default (seconds, a, b) => {
 			return descriptor;
 		}
 
-		if (global.database && object instanceof global.database.Model) {
+		if (object instanceof global.database.Model) {
 			object.__cache__ = {
 				enabled: true,
 				maxAge: seconds

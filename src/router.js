@@ -1,6 +1,8 @@
 import http from 'http';
 import path from 'path';
 
+http.STATUS_CODES[420] = 'Smoke Weed Everyday';
+
 export const GET = 'GET';
 export const POST = 'POST';
 export const PUT = 'PUT';

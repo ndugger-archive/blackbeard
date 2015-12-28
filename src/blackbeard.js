@@ -5,8 +5,8 @@ import path from 'path';
 import url from 'url';
 
 // Dependencies:
-import db from 'sequelize';
 import filetype from 'file-type';
+import Database from 'sequelize';
 import Redis from 'redis';
 
 // Blackbeard modules:
@@ -94,19 +94,22 @@ export default class Blackbeard {
 
 	// Start the server on specified port:
 	static async start (port = this.settings.server.port) {
-
-		console.info('Shivering me timbers (starting server)...')
-
 		try {
+
+			console.info('Shivering me timbers (starting server)...');
+
 			if (!this.ready || !this.settings) {
 				throw new Error(`Server is not ready or cannot find a valid blackbeard.config file in ${process.cwd()}`);
 			}
+
 			// Detect possible duplicate routes:
 			for (let route in http.routes) {
 				if (route.match(/dupe:/)) throw new TypeError(`There are multiple routes with the path of ${route.replace(/dupe:/, '')}`);
 			}
+
 			// Apply the port http for future use:
 			http.globalAgent.currentPort = port;
+
 			// Start the actual HTTP server:
 			http.createServer((request, response) => this.__listen__(request, response)).listen(port);
 
@@ -125,7 +128,6 @@ export default class Blackbeard {
 
 		http.routes = {};
 		http.controllers = {};
-		http.STATUS_CODES[420] = 'Smoke Weed Everyday';
 
 		let settings = fs.readFileSync(path.join(process.cwd(), 'blackbeard.config'), 'utf8');
 
@@ -135,7 +137,7 @@ export default class Blackbeard {
 			this.settings = settings;
 
 			// Connect to the database:
-			if ('database' in settings) global.database = new db(
+			if ('database' in settings) global.database = new Database(
 				settings.database.database,
 				settings.database.username,
 				settings.database.password,
@@ -201,7 +203,7 @@ export default class Blackbeard {
 
 		// Does the response have a 'send' method?
 		if ('__send__' in actionResponse) try {
-			return await actionResponse.__send__(request, response);
+			return await actionResponse.__send__(request, response, this.settings);
 		}
 		catch (e) {
 			actionResponse = new Error(e);
@@ -209,6 +211,12 @@ export default class Blackbeard {
 
 		// Is the response an Error?
 		if (actionResponse instanceof Error) return this.__err__(500, actionResponse.message, request, response);
+
+		// Should we cache the response?
+		const cKey = `Action::${request.url}`;
+		if (response.cache && !(await rememberFromCache(cKey))) {
+			storeInCache(cKey, actionResponse, this.settings.server.cache.maxAge);
+		}
 
 		// Is the response a Buffer?
 		if (actionResponse instanceof Buffer) {
@@ -233,7 +241,7 @@ export default class Blackbeard {
 		}
 	}
 
-	// Error handler:
+	// Internal Error handler:
 	static async __err__ (code, error, request, response) {
 		log('error', code, request.url);
 		response.statusCode = Number(code) || 500;
@@ -261,6 +269,7 @@ export default class Blackbeard {
 		request.query = route.data.__query__;
 		delete route.data.__query__;
 
+		// If action or controller has the @EnableCORS annotation:
 		if ('__cors__' in controller) response.setHeader('Access-Control-Allow-Origin', controller.__cors__);
 		if ('__cors__' in action) response.setHeader('Access-Control-Allow-Origin', action.__cors__);
 
@@ -269,13 +278,25 @@ export default class Blackbeard {
 			if (!(await requirement(request, response))) return this.__err__(401, http.STATUS_CODES[401], request, response);
 		}
 
+		// Check if there's a cached verion of the action:
+		if ('__cache__' in action && action.__cache__.enabled) {
+			response.cache = true;
+
+			if ('client' in this.settings && 'cache' in this.settings.client && this.settings.client.cache.enabled) {
+				response.setHeader('Cache-Control', `public, max-age=${(this.settings.client.cache.maxAge * 1000) || 1000}`);
+			}
+
+			const cached = await rememberFromCache(`Action::${request.url}`);
+			if (cached) return cached;
+		}
+
 		// Turn data into an aray, and then spread it as arguments for the action:
 		for (let key in route.data) data.push(route.data[key]);
 
 		return await action(...data, request, response);
 	}
 
-	// Internal POST request handler:
+	// Internal POST request handler (uses get handler after end event):
 	static async __post__ (route, request, response) {
 		return new Promise((resolve, reject) => {
 			let body = new Buffer([]);

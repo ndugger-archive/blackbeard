@@ -10,7 +10,7 @@ Using Redis (*for caching & session storage*), and Sequelize (*for models/ORM*),
 
 Blackbeard currently only supports [Marko](https://www.npmjs.com/package/marko) for templating, but plans to support others are in the pipeline. Suggestions are welcome.
 
-**Current version:** 0.0.15-alpha
+**Current version:** 0.0.16-alpha
 
 - [Installation](#installation)
 - [Example usage](#example-usage)
@@ -61,53 +61,52 @@ Blackbeard looks for files in a dist/ folder; you will need to make sure to buil
 **src/models/user.js**
 
 ```javascript
-	import { Model, Schema } from 'blackbeard';
+import { Model, Schema } from 'blackbeard';
 
-	@Model
-	export default class User {
-		name = Schema.Text;
-		email = Schema.Text;
-		age = Schema.Integer;
-	}
+@Model
+export default class User {
+	name = Schema.Text;
+	email = Schema.Text;
+	age = Schema.Integer;
+}
 ```
 
 ---
 
 **src/controllers/maincontroller.js**
 ```javascript
-	import Blackbeard from 'blackbeard';
-	import User from '../models/user';
+import Blackbeard from 'blackbeard';
+import User from '../models/user';
 
-	const Controller = Blackbeard.Controller;
-	const Router = Blackbeard.Router;
-	const MapRoute = Router.MapRoute;
-	const View = Blackbeard.View;
+const { Controller, Router, View } = Blackbeard;
+const { MapRoute } = Router;
 
-	@Controller
-	export default class MainController {
-		
-		@MapRoute('/', Router.GET)
-		async index (request, response) {
-			try {
-				const users = await User.findAll();
-				return new View('index', { users });
-			} catch (e) {
-				console.error(e);
-				return null;
-			}
+@Controller
+@MapRoute('/')
+export default class MainController {
+	
+	@MapRoute('/', GET)
+	async index (request, response) {
+		try {
+			const users = await User.findAll();
+			return new View('index', { users });
+		} catch (e) {
+			console.error(e);
+			return null;
 		}
-
-		@MapRoute('/foo/{bar}', Router.GET)
-		async foo (bar, request, response) {
-			// ...
-		}
-
-		@MapRoute('/foo/{bar}/{baz}', Router.POST)
-		async whatever (bar, baz, request, response) {
-			// posted data accessible via `request.body`
-		}
-
 	}
+
+	@MapRoute('/foo/{bar}', GET)
+	async foo (bar, request, response) {
+		// ...
+	}
+
+	@MapRoute('/foo/{bar}/{baz}', POST)
+	async whatever (bar, baz, request, response) {
+		// posted data accessible via `request.body`
+	}
+
+}
 ```
 
 ---
@@ -115,20 +114,20 @@ Blackbeard looks for files in a dist/ folder; you will need to make sure to buil
 **src/views/main/index.marko**
 
 ```html
-	<!doctype html>
-	<html>
-		<body>
+<!doctype html>
+<html>
+	<body>
 
-			<div class='users'>
+		<div class='users'>
 
-				<div class='user' for='user in data.users'>
-					<b>${ user.name }</b>: ${ user.age }
-				</div>
-
+			<div class='user' for='user in data.users'>
+				<b>${ user.name }</b>: ${ user.age }
 			</div>
 
-		</body>
-	</html>
+		</div>
+
+	</body>
+</html>
 ```
 
 Known Bugs
