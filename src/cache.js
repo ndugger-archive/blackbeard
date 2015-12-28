@@ -1,5 +1,4 @@
 import http from 'http';
-import db from 'sequelize';
 
 export const storeInCache = (key, value, maxAge = 0) => {
 	try {
@@ -75,7 +74,7 @@ export default (seconds, a, b) => {
 			return descriptor;
 		}
 
-		if (object instanceof global.database.Model) {
+		if (global.database && object instanceof global.database.Model) {
 			object.__cache__ = {
 				enabled: true,
 				maxAge: seconds
@@ -95,7 +94,7 @@ export default (seconds, a, b) => {
 			return descriptor;
 		}
 
-		if (object instanceof global.database.Model) {
+		if (global.database && object instanceof global.database.Model) {
 			object.__cache__ = {
 				enabled: true,
 				maxAge: seconds

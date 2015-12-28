@@ -45,6 +45,12 @@ gulp.task('build', [
 
 gulp.task('default', ['build']);`;
 
+const boilerplateApp = `import './controllers/maincontroller';
+import './controllers/errorcontroller';
+
+import Blackbeard from 'blackbeard';
+Blackbeard.start();`;
+
 const boilerplateController = `import { Controller, DataString, Router, View } from 'blackbeard';
 const { MapRoute, GET, POST } = Router;
 
@@ -82,7 +88,7 @@ class ErrorController {
 
 	@MapRoute('/404', GET)
 	async notFound () {
-		return 'Jedi Mind Trick 404 - This is not the page you're looking for';
+		return 'Jedi Mind Trick 404 - This is not the page you\\'re looking for';
 	}
 
 }`;
@@ -200,9 +206,11 @@ const boilerplateMainFoo = `<layout-use template='../master.marko'>
 		})
 		// Create the "src" folder:
 		.then(function () {
-			fs.mkdir(path.join(process.cwd(), 'src'), function (error) {
-				if (error) console.log(error.message);
-				resolve();
+			return new Promise(function (resolve) {
+				fs.mkdir(path.join(process.cwd(), 'src'), function (error) {
+					if (error) console.log(error.message);
+					resolve();
+				});
 			});
 		})
 		// Create the MVC structure:
@@ -241,10 +249,18 @@ const boilerplateMainFoo = `<layout-use template='../master.marko'>
 				// Should we create the 'boilerplate' files?
 				if (initial.boilerplate.match(/y(es)?/)) {
 					const src = path.join(process.cwd(), 'src');
-					// Add the MainController file:
+					// Add the appe ntry point file:
 					new Promise(function (resolve) {
-						fs.writeFile(path.join(src, 'controllers', 'maincontroller.js'), boilerplateController, 'utf8', function () {
+						fs.writeFile(path.join(src, 'app.js'), boilerplateApp, 'utf8', function () {
 							resolve();
+						});
+					})
+					// Add the MainController file:
+					.then(function () {
+						return new Promise(function (resolve) {
+							fs.writeFile(path.join(src, 'controllers', 'maincontroller.js'), boilerplateController, 'utf8', function () {
+								resolve();
+							});
 						});
 					})
 					// Add the ErrorController file:
@@ -252,7 +268,7 @@ const boilerplateMainFoo = `<layout-use template='../master.marko'>
 						return new Promise(function (resolve) {
 							fs.writeFile(path.join(src, 'controllers', 'errorcontroller.js'), boilerplateErrorController, 'utf8', function () {
 								resolve();
-							}));
+							});
 						});
 					})
 					// Add the User modelm file:
@@ -267,6 +283,14 @@ const boilerplateMainFoo = `<layout-use template='../master.marko'>
 					.then(function () {
 						return new Promise(function (resolve) {
 							fs.writeFile(path.join(src, 'views', 'master.marko'), boilerplateMasterView, 'utf8', function () {
+								resolve();
+							});
+						});
+					})
+					// Add the viws/main folder:
+					.then(function () {
+						return new Promise(function (resolve) {
+							fs.mkdir(path.join(src, 'views', 'main'), function () {
 								resolve();
 							});
 						});
@@ -309,6 +333,8 @@ const boilerplateMainFoo = `<layout-use template='../master.marko'>
 
 			});
 		});
+
+		prompt.start();
 	}
 
 	default: {
@@ -316,5 +342,3 @@ const boilerplateMainFoo = `<layout-use template='../master.marko'>
 	}
 
 } })();
-
-prompt.start();
