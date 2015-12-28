@@ -50,23 +50,23 @@ export const View = _View;
 
 // Mappings to sequelize schema:
 export const Schema = {
-	String: db.STRING,
-	Binary: db.STRING.BINARY,
-	Text: db.TEXT,
-	Integer: db.INTEGER,
-	BigInt: db.BIGINT,
-	Float: db.FLOAT,
-	Real: db.REAL,
-	Double: db.DOUBLE,
-	Decimal: db.DECIMAL,
-	Date: db.DATE,
-	Boolean: db.BOOLEAN,
-	Enum: db.ENUM,
-	Array: db.ARRAY,
-	JSON: db.JSON,
-	JSONB: db.JSONB,
-	Blob: db.BLOB,
-	UUID: db.UUID
+	String: Database.STRING,
+	Binary: Database.STRING.BINARY,
+	Text: Database.TEXT,
+	Integer: Database.INTEGER,
+	BigInt: Database.BIGINT,
+	Float: Database.FLOAT,
+	Real: Database.REAL,
+	Double: Database.DOUBLE,
+	Decimal: Database.DECIMAL,
+	Date: Database.DATE,
+	Boolean: Database.BOOLEAN,
+	Enum: Database.ENUM,
+	Array: Database.ARRAY,
+	JSON: Database.JSON,
+	JSONB: Database.JSONB,
+	Blob: Database.BLOB,
+	UUID: Database.UUID
 };
 
 // Arrgghh, matey!
