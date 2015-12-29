@@ -1,6 +1,6 @@
 {
   "name": "blackbeard",
-  "version": "0.0.19-alpha",
+  "version": "0.1.0-beta",
   "description": "Blackbeard is an opinionated MVC framework for Node.js, designed to be familar.",
   "main": "dist/blackbeard.js",
   "bin": {

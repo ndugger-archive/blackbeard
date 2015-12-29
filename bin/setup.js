@@ -15,7 +15,6 @@ gulp.task('js:transpile', function () {
 	gulp.src('./src/**/*.js')
 		.pipe(sourcemaps.init())
 		.pipe(babel({ stage: 0, optional: ['runtime'] }))
-		.pipe(uglify())
 		.pipe(sourcemaps.write('./maps'))
 		.pipe(gulp.dest('./dist/'));
 });
