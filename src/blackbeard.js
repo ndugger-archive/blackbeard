@@ -149,10 +149,20 @@ export default class Blackbeard {
 				}
 			);
 
-			// Connect to Redis server (for caching):
-			if ('server' in settings && 'cache' in settings.server) {
-				http.cache = Redis.createClient();
-				http.cache.defaultMaxAge = settings.server.cache.maxAge || 0;
+			// Connect to Redis server (for caching and session storage):
+			if ('server' in settings && 'redis' in settings.server && settings.server.redis.enabled) {
+				const { username, password, host, port } = settings.server.redis;
+				let options;
+
+				if (username && password) {
+					options = `redis://${username}:${password}@${host}:${port}`;
+				}
+				else {
+					options = { host, port };
+				}
+
+				http.cache = Redis.createClient(options);
+				http.cache.defaultMaxAge = settings.server.redis.defaultMaxAge || 0;
 			}
 		}
 		catch (e) {
@@ -215,7 +225,7 @@ export default class Blackbeard {
 		// Should we cache the response?
 		const cKey = `Action::${request.url}`;
 		if (response.cache && !(await rememberFromCache(cKey))) {
-			storeInCache(cKey, actionResponse, this.settings.server.cache.maxAge);
+			storeInCache(cKey, actionResponse, this.settings.server.redis.defaultMaxAge);
 		}
 
 		// Is the response a Buffer?
@@ -283,7 +293,9 @@ export default class Blackbeard {
 			response.cache = true;
 
 			if ('client' in this.settings && 'cache' in this.settings.client && this.settings.client.cache.enabled) {
-				response.setHeader('Cache-Control', `public, max-age=${(this.settings.client.cache.maxAge * 1000) || 1000}`);
+				response.setHeader('Cache-Control', `
+					public, max-age=${(this.settings.client.cache.defaultMaxAge * 1000) || 1000}`
+				);
 			}
 
 			const cached = await rememberFromCache(`Action::${request.url}`);

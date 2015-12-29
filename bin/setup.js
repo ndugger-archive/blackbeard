@@ -125,74 +125,97 @@ const boilerplateMainFoo = `<layout-use template='../master.marko'>
 
 	case 'setup': {
 		const initial = {
-			properties: {
+			boilerplate: {
+				description: 'Include basic boilerplate?',
+				pattern: /(y(es)?|no?)$/,
+				message: '"yes" or "no"',
+				default: 'yes'
+			},
 
-				boilerplate: {
-					description: 'Include basic boilerplate?',
-					pattern: /(y(es)?|no?)$/,
-					message: '"yes" or "no"',
-					default: 'yes'
-				},
+			debugMode: {
+				description: 'Run Blackbeard in debug mode?',
+				pattern: /(y(es)?|no?)$/,
+				message: '"yes" or "no"',
+				default: 'no'
+			},
 
-				debugMode: {
-					description: 'Run Blackbeard in debug mode?',
-					pattern: /(y(es)?|no?)$/,
-					default: 'no'
-				},
+			serverPort: {
+				description: 'The port on which to run Blackbeard',
+				default: 80
+			},
 
-				serverPort: {
-					description: 'The port on which to run Blackbeard',
-					default: 80
-				},
+			clientCache: {
+				description: 'Client-side caching? Set the cache\'s max-age in seconds',
+				default: 60
+			},
 
-				serverCache: {
-					description: 'Server-side caching? Set the cache\'s max-age in seconds',
-					default: 0
-				},
-
-				clientCache: {
-					description: 'Client-side caching? Set the cache\'s max-age in seconds',
-					default: 60
-				},
-
-				database: {
-					description: 'Use a database? [postgres, mysql, mariadb, sqlite, mssql]',
-					pattern: /none|(postgres|mysql|mariadb|sqlite|mssql)$/,
-					message: 'Must be one of the following: none, postgres, mysql, mariadb, sqlite, mssql',
-					default: 'none'
-				},
+			redis: {
+				description: 'Use redis? (required for server caching and built-in sessions)',
+				pattern: /(y(es)?|no?)$/,
+				message: '"yes" or "no"',
+				default: 'yes'
+			}
+		};
+		const redis = {
+			defaultMaxAge: {
+				description: 'The default max-age for cache entries (in seconds)',
+				default: 0
+			},
+			host: {
+				description: 'Domain/IP in which Redis resides',
+				default: 'localhost'
+			},
+			port: {
+				description: 'Port in which Redis resides',
+				default: 6379
+			},
+			username: {
+				description: 'Login username for Redis (leave blank for none)'
+			},
+			password: {
+				description: 'Login password for Redis (leave blank for none)'
+			}
+		};
+		const dbInitial = {
+			database: {
+				description: 'Use a database? [postgres, mysql, mariadb, sqlite, mssql]',
+				pattern: /none|(postgres|mysql|mariadb|sqlite|mssql)$/,
+				message: 'Must be one of the following: none, postgres, mysql, mariadb, sqlite, mssql',
+				default: 'none'
 			}
 		};
 		const database = {
-			properties: {
+			domain: {
+				description: 'Domain/IP in which your database resides',
+				default: 'localhost'
+			},
 
-				domain: {
-					description: 'URL/Domain in which your domain resides',
-					default: 'localhost'
-				},
+			port: {
+				description: 'Port on which your database resides',
+				default: 80
+			},
 
-				port: {
-					description: 'Port on which your database resides',
-					default: 80
-				},
+			database: {
+				description: 'Name of your database',
+				default: 'database'
+			},
 
-				database: {
-					description: 'Name of your database',
-					default: 'database'
-				},
+			username: {
+				description: 'Login username for your database',
+				default: 'admin'
+			},
 
-				username: {
-					description: 'Login username for your database',
-					default: 'admin'
-				},
-
-				password: {
-					description: 'Login password for your database',
-					default: 'password'
-				}
+			password: {
+				description: 'Login password for your database',
+				default: 'password'
 			}
 		};
 		const config = {};
+		const saveConfig = function () {
+			fs.writeFile(path.join(process.cwd(), 'blackbeard.config'), JSON.stringify(config, null, 2), 'utf8', function (error) {
+				if (error) console.error(error);
+			});
+		};
 			
 		prompt.message = 'Blackbeard Setup';
 
@@ -226,22 +249,21 @@ const boilerplateMainFoo = `<layout-use template='../master.marko'>
 		// Start prompting the user for configuration:
 		.then(function () {
 			console.log();
-			prompt.get(initial, function (error, initial) {
+			prompt.get({ properties: initial }, function (error, initial) {
 
 				if (error) return console.error(error);
 
-				config.debug = initial.debugMode.match(/y(es)?/) !== null;
+				config.debug = Boolean(initial.debugMode.match(/y(es)?/));
 				config.server = {
 					port: initial.serverPort,
-					cache: {
-						enabled: Number(initial.serverCache) > 0,
-						maxAge: Number(initial.serverCache)
+					redis: {
+						enabled: Boolean(initial.redis.match(/y(es)?/))
 					}
 				};
 				config.client = {
 					cache: {
 						enabled: Number(initial.clientCache) > 0,
-						maxAge: Number(initial.clientCache)
+						defaultMaxAge: Number(initial.clientCache) || 0
 					}
 				};
 
@@ -313,20 +335,40 @@ const boilerplateMainFoo = `<layout-use template='../master.marko'>
 					.catch(function (error) { console.error(error) });
 				}
 
-				// Does the user wish to use a database with Blackbeard?
-				if (initial.database !== 'none') {
-					prompt.get(database, function (error, database) {
-						config.database = database;
-						config.database.engine = initial.database;
+				if (config.server.redis.enabled) {
+					prompt.get({ properties: redis }, function (error, redis) {
+						config.server.redis.defaultMaxAge = Number(redis.defaultMaxAge) || 0;
+						config.server.redis.host = redis.host;
+						config.server.redis.port = redis.port;
+						config.server.redis.username = redis.username;
+						config.server.redis.password = redis.password;
 
-						fs.writeFile(path.join(process.cwd(), 'blackbeard.config'), JSON.stringify(config, null, 2), 'utf8', function (error) {
-							if (error) console.error(error);
+						prompt.get({ properties: dbInitial }, function (error, db) {
+							if (db.database !== 'none') {
+								prompt.get({ properties: database }, function (error, database) {
+									config.database = database;
+									config.database.engine = db.database;
+									saveConfig();
+								});
+							}
+							else {
+								saveConfig();
+							}
 						});
 					});
 				}
 				else {
-					fs.writeFile(path.join(process.cwd(), 'blackbeard.config'), JSON.stringify(config, null, 2), 'utf8', function (error) {
-						if (error) console.error(error);
+					prompt.get({ properties: dbInitial }, function (error, db) {
+						if (db.database !== 'none') {
+							prompt.get({ properties: database }, function (error, database) {
+								config.database = database;
+								config.database.engine = db.database;
+								saveConfig();
+							});
+						}
+						else {
+							saveConfig();
+						}
 					});
 				}
 

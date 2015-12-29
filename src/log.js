@@ -1,5 +1,6 @@
 import fs from 'fs';
 import http from 'http';
+import path from 'path';
 
 export default (type, message, route = '?') => {
 	const msg = Number(message) in http.STATUS_CODES ? `${message} ${http.STATUS_CODES[message]}` : `500 ${message}`;

@@ -47,7 +47,7 @@ export default model => {
 		global.database.define(model.name, new model, {
 
 			// Overwrite methods to enable caching/invalidation on models:
-			classMethods: http.cache ? {
+			classMethods: cache ? {
 
 				// Find:
 				all: overwrite('all', true),

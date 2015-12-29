@@ -1,4 +1,4 @@
-**Current Version:** 0.1.0-beta
+**Current Version:** 0.1.1-beta
 
 # Quickstart
 - First, create or generate a **package.json** file (```npm init```)
@@ -7,6 +7,10 @@
 - Finally, run ```npm run blackbeard setup```
 
 It is **highly recommended** that you allow the setup to generate some boilerplate code for you. This is the best way to understand and see how the API works.
+
+**Requirements:**
+- Node >= 4.x
+- NPM >= 3.x
 
 ***
 
