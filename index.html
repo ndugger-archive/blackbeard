@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Blackbeard by ndugger</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Blackbeard</h1>
+      <h2 class="project-tagline">an MVC framework for Node.js, designed to be familar.</h2>
+      <a href="https://github.com/ndugger/blackbeard" class="btn">View on GitHub</a>
+      <a href="https://github.com/ndugger/blackbeard/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/ndugger/blackbeard/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="what-is-blackbeard" class="anchor" href="#what-is-blackbeard" aria-hidden="true"><span class="octicon octicon-link"></span></a>What is Blackbeard?</h1>
+
+<p>Blackbeard is a heavily opinionated MVC framework. It was designed to be familar and simple, yet fast and powerful. If you're familiar with .NET MVC or Spring framework, then you should be able to pick up Blackbeard's API pretty quickly.</p>
+
+<h1>
+<a id="why-blackbeard" class="anchor" href="#why-blackbeard" aria-hidden="true"><span class="octicon octicon-link"></span></a>Why Blackbeard?</h1>
+
+<p>Most other popular frameworks are great (they're popular for a reason), but JavaScript has evolved very quickly, as of late, and the other frameworks' APIs do not match the new language features. Blackbeard's goal is to be a great framework, but to also use modern and future JavaScript syntax in order to maximize readability and RAD capabilities.</p>
+
+<p><strong>Features:</strong></p>
+
+<ul>
+<li>Models (via sequelize)</li>
+<li>Views (default via Marko)</li>
+<li>Controllers</li>
+<li>Routing</li>
+<li>Sessions and Caching (via Redis)</li>
+<li>Easy API via Annotations/ Class decorators</li>
+<li>Built-in Error re-routing/ messaging</li>
+<li>Simple API for making external requests</li>
+<li>Very easy to make a RESTful JSON api</li>
+</ul>
+
+<hr>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<p><strong>Requirements:</strong></p>
+
+<ul>
+<li>Node &gt;= 4.x</li>
+<li>NPM &gt;= 3.x</li>
+</ul>
+
+<p>You can install Blackbeard via NPM: <strong><code>npm install blackbeard --save</code></strong></p>
+
+<p>Once Blackbeard, and all of its dependencies have been downloaded, you're going to want to open your <strong>package.json</strong> file. If you do not have one yet, go ahead and generate one now (<code>npm init</code>).</p>
+
+<p>In your package file, add a script, like so:</p>
+
+<p><code>"scripts": {
+  "blackbeard": "blackbeard"
+},</code></p>
+
+<p>This links the locally installed <code>blackbeard</code> command to your npm package file for convenience.</p>
+
+<h2>
+<a id="setup" class="anchor" href="#setup" aria-hidden="true"><span class="octicon octicon-link"></span></a>Setup</h2>
+
+<p>Once you've installed Blackbeard, and have added the "blackbeard" command to your package file, you're going to want to run <strong><code>npm run blackbeard setup</code></strong> in your command shell.</p>
+
+<p>You will then be prompted for some configuration options. It will set up your folder structure, and if you choose to generate some boilerplate code (which is highly recommended that you do so), it will write out some example code for you as well.</p>
+
+<p>The setup script will also create a <strong>gulpfile.js</strong> for you. When you are ready to build/transpile your code (via babel), just run <strong><code>gulp build</code></strong>.</p>
+
+<p>If you choose to use a database (via Sequelize), then you will need to install the apropriate modules as well. If you're unsure of what modules you'll need, Sequelize will throw an error that will tell you which modules that you're mising. Future versions of Blackbeard will automatically install these for you upon setup.</p>
+
+<h2>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Examples</h2>
+
+<p><strong>The best way to learn would be to run the setup script, and include the boilerplate code</strong>. It will generate examples for you that you can build off of.</p>
+
+<p><strong>Example entry point:</strong></p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">'</span>./controllers/maincontroller<span class="pl-pds">'</span></span>
+<span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">'</span>./controllers/advancedcontroller<span class="pl-pds">'</span></span>;
+
+<span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">'</span>./models/user<span class="pl-pds">'</span></span>;
+<span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">'</span>./models/comment<span class="pl-pds">'</span></span>;
+
+<span class="pl-k">import</span> <span class="pl-smi">Blackbeard</span> <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">'</span>blackbeard<span class="pl-pds">'</span></span>;
+<span class="pl-smi">Blackbeard</span>.<span class="pl-c1">start</span>();</pre></div>
+
+<p>The entry point will register all of your controllers and models, and then start the server.</p>
+
+<p>Most of the API is comprised of class annotations/decorators. The best way to describe this is to simply show you, so here's an example of a very simple controller</p>
+
+<h3>
+<a id="controllers" class="anchor" href="#controllers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Controllers</h3>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">import</span> { <span class="pl-smi">Controller</span>, <span class="pl-smi">Router</span>, <span class="pl-smi">View</span> } <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">'</span>blackbeard<span class="pl-pds">'</span></span>;
+<span class="pl-k">const</span> { <span class="pl-c1">MapRoute</span>, <span class="pl-c1">GET</span> } <span class="pl-k">=</span> Router;
+
+@Controller
+<span class="pl-k">class</span> <span class="pl-en">MainController</span> {
+
+    @<span class="pl-en">MapRoute</span>(<span class="pl-s"><span class="pl-pds">'</span>/<span class="pl-pds">'</span></span>, <span class="pl-c1">GET</span>)
+    <span class="pl-k">async</span> <span class="pl-en">index</span> () {
+        <span class="pl-k">return</span> <span class="pl-k">new</span> <span class="pl-en">View</span>(<span class="pl-s"><span class="pl-pds">'</span>index<span class="pl-pds">'</span></span>); <span class="pl-c">// the server will find the view at "views/main/index.marko"</span>
+    }
+
+}</pre></div>
+
+<p>Now, that's obviously very simple--what about dealing with more complex routing?</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">import</span> { <span class="pl-smi">Controller</span>, <span class="pl-smi">Router</span>, <span class="pl-smi">View</span> } <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">'</span>blackbeard<span class="pl-pds">'</span></span>;
+<span class="pl-k">const</span> { <span class="pl-c1">MapRoute</span>, <span class="pl-c1">GET</span> } <span class="pl-k">=</span> Router;
+
+@Controller
+@<span class="pl-en">MapRoute</span>(<span class="pl-s"><span class="pl-pds">'</span>/advanced<span class="pl-pds">'</span></span>)
+<span class="pl-k">class</span> <span class="pl-en">AdvancedController</span> {
+
+    @<span class="pl-en">MapRoute</span>(<span class="pl-s"><span class="pl-pds">'</span>/foo/{bar}<span class="pl-pds">'</span></span>, <span class="pl-c1">GET</span>)
+    <span class="pl-k">async</span> <span class="pl-en">index</span> (<span class="pl-smi">bar</span>) {
+        <span class="pl-k">return</span> <span class="pl-k">new</span> <span class="pl-en">View</span>(<span class="pl-s"><span class="pl-pds">'</span>index<span class="pl-pds">'</span></span>, { bar }); <span class="pl-c">// the server will find the view at "views/advanced/index.marko"</span>
+    }
+
+}</pre></div>
+
+<p>What exactly did we do? Well, now the Controller has a route; that means that all actions within it will now be accessable via <code>/advanced/&lt;the action's route&gt;</code>. This means that you can reach the index method by navigating to <code>/advanced/foo/&lt;whatever&gt;</code>. You can guess that <code>{something}</code> denotes a variable path, so the <code>bar</code> argument will be set to whatever that path is that was navigated to.</p>
+
+<p>Well, that's great, but what about a POST request?</p>
+
+<div class="highlight highlight-source-js"><pre>@<span class="pl-en">MapRoute</span>(<span class="pl-s"><span class="pl-pds">'</span>/foo<span class="pl-pds">'</span></span>, <span class="pl-c1">POST</span>)
+<span class="pl-k">async</span> <span class="pl-en">foo</span> (<span class="pl-smi">request</span>) {
+    <span class="pl-k">const</span> <span class="pl-c1">data</span> <span class="pl-k">=</span> <span class="pl-smi">request</span>.<span class="pl-c1">body</span>.<span class="pl-c1">toString</span>();
+}</pre></div>
+
+<p>Every action is also passed the request and response objects--you can access posted data via <code>request.body</code>, but it will be a <code>Buffer</code>, so turn it into a string if you need to (like if you posted some JSON).</p>
+
+<p>Here's a list of all of the things that are supported by default to return from an action:</p>
+
+<ul>
+<li><code>new DataString(mimeType, string)</code></li>
+<li><code>new File(pathOrBuffer)</code></li>
+<li><code>new Media(pathOrBuffer)</code></li>
+<li><code>new View(path)</code></li>
+</ul>
+
+<p>Blackbeard also handles returning of Error, Buffer, strings and numbers, and will try to JSON Stringify other Objects.</p>
+
+<p>If an action throws an error, or if an error happens while trying to respond, Blackbeard will look for <code>/error/&lt;code&gt;</code> routes, and send those actions instead. If no route exists for that error code, it will just respond with text. If you'd like to show a custom page for an error, simply create a route for that error code in an <code>ErrorController</code></p>
+
+<h3>
+<a id="models" class="anchor" href="#models" aria-hidden="true"><span class="octicon octicon-link"></span></a>Models</h3>
+
+<p>Models are also described using a class annotation, and besides using modern JavaScript syntax, they are <a href="http://docs.sequelizejs.com/en/latest/docs/models-definition/">Sequelize Models</a>, and can be defined in a <em>very</em> similar manner.</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">import</span> { <span class="pl-smi">Model</span>, <span class="pl-smi">Schema</span> } <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">'</span>blackbeard<span class="pl-pds">'</span></span>;
+<span class="pl-k">const</span> { <span class="pl-c1">String</span>, <span class="pl-c1">Integer</span>, <span class="pl-c1">Text</span> } <span class="pl-k">=</span> Schema;
+
+@Model
+<span class="pl-k">export</span> <span class="pl-v">default</span> <span class="pl-k">class</span> <span class="pl-en">User</span> {
+    name <span class="pl-k">=</span> <span class="pl-c1">String</span>;
+    age <span class="pl-k">=</span> Integer;
+    bio <span class="pl-k">=</span> <span class="pl-c1">Text</span>;
+}</pre></div>
+
+<p>Once it comes time to use the Model in one of your controllers, the API has not changed from the original <a href="http://docs.sequelizejs.com/en/latest/docs/models-usage/">Sequelize Model Usage</a>.</p>
+
+<p><strong>Here's a list of supported Schema types:</strong></p>
+
+<ul>
+<li>String</li>
+<li>Binary</li>
+<li>Text</li>
+<li>Integer</li>
+<li>BigInt</li>
+<li>Float</li>
+<li>Real</li>
+<li>Double</li>
+<li>Decimal</li>
+<li>Date</li>
+<li>Boolean</li>
+<li>Enum</li>
+<li>Array</li>
+<li>JSON</li>
+<li>JSONB</li>
+<li>Blob</li>
+<li>UUID</li>
+</ul>
+
+<h3>
+<a id="views" class="anchor" href="#views" aria-hidden="true"><span class="octicon octicon-link"></span></a>Views</h3>
+
+<p>There's not much to document here, but Blackbeard (by default) uses the <a href="http://markojs.com/">Marko</a> templating engine, and you can learn about it by reading their documentation.</p>
+
+<p>There are plans to support configuring which templating engine to use. It will be a part of the setup script.</p>
+
+<h2>
+<a id="annotations" class="anchor" href="#annotations" aria-hidden="true"><span class="octicon octicon-link"></span></a>Annotations</h2>
+
+<p>As stated, most of the API is comprised of class annotations/decorators. Here's a list of them and how you can use them:</p>
+
+<h3>
+<a id="cache" class="anchor" href="#cache" aria-hidden="true"><span class="octicon octicon-link"></span></a><code>@Cache</code>
+</h3>
+
+<ul>
+<li>Used to Cache actions and Models (database queries)</li>
+<li>Can only be used if you enabled caching and are running Redis</li>
+<li>Will either use the maxAge in the config, or you may pass one in</li>
+</ul>
+
+<div class="highlight highlight-source-js"><pre>@<span class="pl-en">Cache</span>(<span class="pl-c1">30</span>)
+@Model
+<span class="pl-k">export</span> <span class="pl-v">default</span> <span class="pl-k">class</span> <span class="pl-en">User</span> { ... }</pre></div>
+
+<div class="highlight highlight-source-js"><pre>@Cache
+<span class="pl-k">async</span> <span class="pl-en">myAction</span> () { ... }</pre></div>
+
+<hr>
+
+<h3>
+<a id="controller" class="anchor" href="#controller" aria-hidden="true"><span class="octicon octicon-link"></span></a><code>@Controller</code>
+</h3>
+
+<ul>
+<li>Used to define a Controller on a class</li>
+</ul>
+
+<div class="highlight highlight-source-js"><pre>@Controller
+<span class="pl-k">class</span> <span class="pl-en">MainController</span> { ... }</pre></div>
+
+<hr>
+
+<h3>
+<a id="enablecors" class="anchor" href="#enablecors" aria-hidden="true"><span class="octicon octicon-link"></span></a><code>@EnableCORS</code>
+</h3>
+
+<ul>
+<li>Used to enable cross-orign-resource-sharing for that action</li>
+<li>Will either use "*" for the allowed origin, or you may pass one in</li>
+<li>Can be used on a Controller, or an action</li>
+</ul>
+
+<div class="highlight highlight-source-js"><pre>@Controller
+@EnableCORS
+<span class="pl-k">class</span> <span class="pl-en">MainController</span> { ... }</pre></div>
+
+<hr>
+
+<h3>
+<a id="maproute" class="anchor" href="#maproute" aria-hidden="true"><span class="octicon octicon-link"></span></a><code>@MapRoute</code>
+</h3>
+
+<ul>
+<li>Access it on the <code>Router</code> object</li>
+<li>Takes a path and a request method</li>
+<li>Paths may contain variables (<code>{variable}</code>)</li>
+<li>Currently supports GET, POST, and PUT</li>
+<li>No duplicate routes are allowed; Blackbeard will throw an error</li>
+</ul>
+
+<div class="highlight highlight-source-js"><pre>@<span class="pl-en">MapRoute</span>(<span class="pl-s"><span class="pl-pds">'</span>/my/path/{here}<span class="pl-pds">'</span></span>, <span class="pl-c1">GET</span>)
+<span class="pl-k">async</span> <span class="pl-en">myAction</span> (<span class="pl-smi">here</span>) { ... }</pre></div>
+
+<hr>
+
+<h3>
+<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a><code>@Requirements</code>
+</h3>
+
+<ul>
+<li>Can be used to set restrictions on an action</li>
+<li>Any passed in methods <strong>must</strong> return a Promise</li>
+<li>If any of the promises reject, the server responds with a 401</li>
+<li>Can either be a single promise, or an array of promises</li>
+</ul>
+
+<div class="highlight highlight-source-js"><pre>@<span class="pl-en">MapRoute</span>(<span class="pl-s"><span class="pl-pds">'</span>/foo<span class="pl-pds">'</span></span>, <span class="pl-c1">GET</span>)
+@<span class="pl-en">Requirements</span>([myPromise, anotherPromise])
+<span class="pl-k">async</span> <span class="pl-en">foo</span> () { ... }</pre></div>
+
+<h2>
+<a id="sessions" class="anchor" href="#sessions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sessions</h2>
+
+<p>Sessions are stored in Redis, so if you want to use the built-in session handling, you'll need to be running a redis server.</p>
+
+<p>Actions may either return a <code>Session</code> object, which will send as JSON, or you may simply use the <code>Session</code> object in your action, and use its <code>save(request, response)</code> method. This will create a key, which will be saved in a cookie, and will store the actual session data in Redis. The data that is store in the session is entirely up to you.</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">async</span> my <span class="pl-en">Action</span> (<span class="pl-smi">request</span>, <span class="pl-smi">response</span>) {
+    <span class="pl-k">const</span> <span class="pl-c1">session</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Session</span>({
+        name<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>UserName<span class="pl-pds">'</span></span>,
+        id<span class="pl-k">:</span> <span class="pl-c1">1</span>,
+        role<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>Admin<span class="pl-pds">'</span></span>
+    });
+    <span class="pl-k">await</span> <span class="pl-smi">session</span>.<span class="pl-en">save</span>(request, response);
+}</pre></div>
+
+<p>If you use the built-in Session management, every View will be passed 2 values.</p>
+
+<ul>
+<li>
+<code>data.authenticated</code>: This is a boolean flag</li>
+<li>
+<code>data.session</code>: This is the actual session (contains the data that you passed into the <code>Session</code>.</li>
+</ul>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/ndugger/blackbeard">Blackbeard</a> is maintained by <a href="https://github.com/ndugger">ndugger</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
