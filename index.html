@@ -317,7 +317,7 @@
 
 <p>Actions may either return a <code>Session</code> object, which will send as JSON, or you may simply use the <code>Session</code> object in your action, and use its <code>save(request, response)</code> method. This will create a key, which will be saved in a cookie, and will store the actual session data in Redis. The data that is store in the session is entirely up to you.</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">async</span> my <span class="pl-en">Action</span> (<span class="pl-smi">request</span>, <span class="pl-smi">response</span>) {
+<div class="highlight highlight-source-js"><pre><span class="pl-k">async</span> <span class="pl-en">myAction</span> (<span class="pl-smi">request</span>, <span class="pl-smi">response</span>) {
     <span class="pl-k">const</span> <span class="pl-c1">session</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Session</span>({
         name<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>UserName<span class="pl-pds">'</span></span>,
         id<span class="pl-k">:</span> <span class="pl-c1">1</span>,
