@@ -1,4 +1,4 @@
-**Current Version:** 0.1.2-beta
+**Current Version:** 0.1.3-beta
 
 # Quickstart
 - First, create or generate a **package.json** file (```npm init```)
@@ -14,4 +14,12 @@ It is **highly recommended** that you allow the setup to generate some boilerpla
 
 ***
 
-For the documentation, please visit: http://ndugger.github.io/blackbeard
+For the documentation, please visit: [ndugger.github.io/blackbeard](http://ndugger.github.io/blackbeard)
+
+***
+
+For support, contact me on twitter: [@NickolasDugger](https://twitter.com/NickolasDugger)
+
+***
+
+Licensed under MIT

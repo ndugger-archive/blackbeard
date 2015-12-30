@@ -1,3 +1,7 @@
+**0.1.3-beta**
+- Added in bluebirdCoroutines into the generated guplfile (setup).
+- Very minor changes to the readme
+
 **0.1.2-beta**
 - Changed build process to use bluebirdCoroutines for async/await.
 - Removed uglify in build process (not compatable with bluebirdCoroutines).

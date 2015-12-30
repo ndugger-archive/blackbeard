@@ -14,7 +14,7 @@ const sourcemaps = require('gulp-sourcemaps');
 gulp.task('js:transpile', function () {
 	gulp.src('./src/**/*.js')
 		.pipe(sourcemaps.init())
-		.pipe(babel({ stage: 0, optional: ['runtime'] }))
+		.pipe(babel({ stage: 0, optional: ['runtime', 'bluebirdCoroutines'] }))
 		.pipe(sourcemaps.write('./maps'))
 		.pipe(gulp.dest('./dist/'));
 });
