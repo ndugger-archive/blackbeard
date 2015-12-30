@@ -15,6 +15,7 @@ export const storeInCache = (key, value, maxAge = 0) => {
 export const rememberFromCache = key => {
 	return new Promise(resolve => {
 		http.cache.get(key, (error, result) => {
+			if (error) reject(error);
 			if (result) {
 				try {
 					result = JSON.parse(result);

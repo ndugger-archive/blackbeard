@@ -177,9 +177,10 @@ export default class Blackbeard {
 	static async __listen__ (request, response) {
 		const route = Router.find(request.url);
 
+		// TODO check if a cached version of this file exists in Redis:
 		// No route (and method is GET), attempt to send a file:
-		if (!route) try {
-			await fs.statAsync(path.join(process.cwd(), 'dist', request.url));
+		if (!route && url.parse(request.url).pathname !== '/') try {
+			await fs.statAsync(path.join(process.cwd(), 'dist', url.parse(request.url).pathname));
 			if ('range' in request.headers) {
 				return new Media(request.url).__send__(request, response);
 			}
@@ -187,6 +188,9 @@ export default class Blackbeard {
 		}
 		catch (e) {
 			return this.__err__(404, e, request, response);
+		}
+		else {
+			return this.__err__(404, 'Not Found', request, response);
 		}
 
 		// Request method mismatch, or method not supported:
@@ -212,7 +216,7 @@ export default class Blackbeard {
 		}
 
 		// Does the response have a 'send' method?
-		if ('__send__' in actionResponse) try {
+		if (actionResponse instanceof Object && '__send__' in actionResponse) try {
 			return await actionResponse.__send__(request, response, this.settings);
 		}
 		catch (e) {

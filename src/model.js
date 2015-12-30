@@ -16,24 +16,20 @@ function overwrite (name, find) {
 			const { maxAge } = model.__cache__;
 			let key = `Model::${model.name}`;
 
-			switch (name) {
+			if (name === 'destroy' || name === 'update') {
+				return resolve(forgetCachedItem(new RegExp(key)).then(original(...arguments)));
+			}
 
-				case 'destroy':
-				case 'update': {
-					return resolve(forgetCachedItem(new RegExp(key)).then(original(...arguments)));
-				}
-
-				default: if (find) {
-					key += query ? JSON.stringify(query) : '';
-					const cached = await rememberFromCache(key);
-					if (cached) {
-						resolve(cached);
-					} else {
-						resolve(original(...arguments).then(results => storeInCache(key, results, maxAge)));
-					}
+			if (find) {
+				key += query ? JSON.stringify(query) : '';
+				const cached = await rememberFromCache(key);
+				if (cached) {
+					resolve(cached);
 				} else {
-					resolve(original(...arguments));
+					resolve(original(...arguments).then(results => storeInCache(key, results, maxAge)));
 				}
+			} else {
+				resolve(original(...arguments));
 			}
 		});
 	}
