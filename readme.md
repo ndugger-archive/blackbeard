@@ -1,4 +1,4 @@
-**Current Version:** 0.1.1-beta
+**Current Version:** 0.1.2-beta
 
 # Quickstart
 - First, create or generate a **package.json** file (```npm init```)
