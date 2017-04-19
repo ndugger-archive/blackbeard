@@ -1,0 +1,8 @@
+title: Blackbeard
+description: an MVC framework for Node.js, designed to be familar.
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-cayman
+
+gems:
+  - jekyll-mentions
